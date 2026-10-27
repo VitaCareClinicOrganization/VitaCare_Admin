@@ -29,7 +29,7 @@ import {
   AdminModal,
   StatusBadge,
 } from '@/common/components/ui'
-import { listUsers, updateUser } from '../services/staffService'
+import { listUsers, updateUser } from '@/modules/admin/services/users'
 import { staffRole } from '@/modules/admin/utils/staffSession'
 import { CustomPermissionsModal } from '../components/CustomPermissionsModal'
 

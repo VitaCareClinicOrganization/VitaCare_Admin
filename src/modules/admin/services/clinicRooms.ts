@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 /** Danh mục phòng (không cần token — giống GET /api/doctors). */
 export async function listClinicRooms({ activeOnly = true } = {}) {

@@ -22,7 +22,8 @@ import {
 import { apiClient, apiErrorMessage } from '@/lib/api-client'
 import { usePermission } from '@/common/hooks/usePermission'
 import { AppPermission } from '@/common/constants/permissions.constant'
-import { createUser, deleteUser, listUsers, updateUser, listPatientHistoryReception, listPatientsReception } from '../services/patientService'
+import { createUser, deleteUser, listUsers, updateUser } from '@/modules/admin/services/users'
+import { listPatientHistoryReception, listPatientsReception } from '@/modules/admin/services/appointments'
 import { formatDateVi, patientListDisplayName } from '@/modules/reception'
 
 type PatientAccount = {

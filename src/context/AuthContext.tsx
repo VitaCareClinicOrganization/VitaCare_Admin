@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { apiClient } from '../lib/api-client'
-import { getCurrentStaff } from '../modules/admin/services/auth'
+import { getCurrentStaff } from '@/modules/auth/services/authService'
 import {
   clearStaffSession,
   getStaffSession,

@@ -20,8 +20,3 @@ export async function getCurrentStaff(token = '') {
     throw new Error(apiErrorMessage(error, 'Không thể xác thực phiên đăng nhập.'))
   }
 }
-
-export const authService = {
-  login,
-  getCurrentStaff,
-}

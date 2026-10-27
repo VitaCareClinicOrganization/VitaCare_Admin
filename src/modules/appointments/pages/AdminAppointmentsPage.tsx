@@ -24,7 +24,7 @@ import {
   listReceptionAppointments,
   rescheduleAppointment,
   updateAppointmentStatus,
-} from '../services/appointmentsService'
+} from '@/modules/admin/services/appointments'
 import { listCatalog } from '@/modules/catalog'
 import { listDoctors } from '@/modules/admin/services/doctors'
 import { listSpecialties, listSpecialtyServices } from '@/modules/admin/services/specialties'

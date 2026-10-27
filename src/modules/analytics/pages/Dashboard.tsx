@@ -7,7 +7,7 @@ import {
   fetchReceptionSummary,
   fetchReceptionRoomsStatus,
   fetchDoctorQueueSummary,
-} from '../services/analyticsService'
+} from '@/modules/admin/services/stats'
 import DoctorAppHeader from '@/modules/doctor/components/DoctorAppHeader'
 import RoleSidebar, { StaffMobileHeader } from '@/modules/portal/components/RoleSidebar'
 import { getStaffSession, isReceptionStaff, staffRole } from '@/modules/admin/utils/staffSession'

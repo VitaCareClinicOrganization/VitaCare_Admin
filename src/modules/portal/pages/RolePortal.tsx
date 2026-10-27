@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@/common/hooks/useNextNavigation'
 import { useAuth } from '@/common/hooks/useAuth'
-import { fetchDashboardStats, AdminAnalyticsPage, Sparkline, DonutChart, KpiMetricCard, SectionCard as Card } from '@/modules/analytics'
+import { AdminAnalyticsPage, Sparkline, DonutChart, KpiMetricCard, SectionCard as Card } from '@/modules/analytics'
+import { fetchDashboardStats } from '@/modules/admin/services/stats'
 import {
   Bar,
   BarChart,

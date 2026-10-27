@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 /** Ghi nhận đã thu phí khám (150k mặc định). method: 'cash' | 'transfer' */
 export async function recordAppointmentPayment({ token, appointmentId, method, amount, note }) {

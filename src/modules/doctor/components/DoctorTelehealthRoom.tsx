@@ -24,8 +24,7 @@ import {
   Info,
 } from "lucide-react";
 import { useWebRTC } from "../hooks/useWebRTC";
-import { apiClient } from "@/lib/api-client";
-import { getSocketBaseUrl } from "@/config/backend";
+import { apiClient, getSocketBaseUrl } from "@/lib/api-client";
 
 interface DoctorTelehealthRoomProps {
   appointmentId: string;

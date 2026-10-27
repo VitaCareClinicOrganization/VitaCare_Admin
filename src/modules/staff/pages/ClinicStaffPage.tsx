@@ -20,7 +20,9 @@ import {
   AdminSelect,
   AdminTextarea,
 } from '@/common/components/ui'
-import { createUser, deleteUser, listUsers, updateUser, listCatalog, resolveMediaUrl } from '../services/staffService'
+import { createUser, deleteUser, listUsers, updateUser } from '@/modules/admin/services/users'
+import { listCatalog } from '@/modules/catalog/services/catalogService'
+import { resolveMediaUrl } from '@/lib/api-client'
 import { useAuth } from '@/common/hooks/useAuth'
 import { usePermission } from '@/common/hooks/usePermission'
 import { AppPermission } from '@/common/constants/permissions.constant'

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiErrorMessage } from '@/lib/api-client'
-import { createUser, deleteUser, listUsers, updateUser } from '../services/staffService'
+import { createUser, deleteUser, listUsers, updateUser } from '@/modules/admin/services/users'
 import { Plus, Search, RefreshCw, Calendar } from 'lucide-react'
 import { useNavigate } from '@/common/hooks/useNextNavigation'
 import {

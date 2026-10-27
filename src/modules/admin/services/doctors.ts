@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 export function isValidDoctorId(id) {
   return typeof id === 'string' && (/^[a-fA-F0-9]{24}$/.test(id) || /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id))
