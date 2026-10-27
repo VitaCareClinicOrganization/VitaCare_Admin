@@ -4,4 +4,3 @@ export { default as DoctorWorkSchedulesPage } from './pages/DoctorWorkSchedulesP
 export { default as ClinicalQueuePage } from './pages/ClinicalQueuePage'
 export { default as DoctorAppHeader } from './components/DoctorAppHeader'
 export { default as IcdDiagnosisField } from './components/IcdDiagnosisField'
-export * from './services/doctorService'

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Download, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/common/hooks/useAuth'
-import { fetchAnalyticsData } from '../services/analyticsService'
+import { fetchAnalyticsData } from '@/modules/admin/services/stats'
 import { listCatalog } from '@/modules/catalog'
 import { staffRole } from '@/modules/admin/utils/staffSession'
 import { useLocation } from '@/common/hooks/useNextNavigation'

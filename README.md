@@ -6,10 +6,9 @@ Trình duyệt gọi `/api/v1` cùng tên miền HTTPS của admin. Next.js chuy
 request, cookie đăng nhập và phản hồi API tới backend qua external rewrites.
 `/uploads` và `/imageapi` cũng được chuyển tiếp để tránh Mixed Content với ảnh.
 
-Trên Vercel, đặt biến môi trường server `BACKEND_API_URL` thành địa chỉ backend,
-ví dụ `http://3.0.207.60:8011`, rồi redeploy. Có thể giữ nguyên
-`NEXT_PUBLIC_API_URL=http://3.0.207.60:8011/api/v1` hiện tại: cấu hình proxy dùng
-biến này làm phương án dự phòng nếu chưa có `BACKEND_API_URL`.
+Đặt `NEXT_PUBLIC_API_URL=http://3.0.207.60/api/v1` trên Vercel rồi redeploy.
+Đây là biến duy nhất cấu hình địa chỉ backend và bắt buộc phải có cả khi chạy local.
+Hạ tầng Terraform công khai cổng 80 qua Nginx; cổng 8011 chỉ dùng nội bộ Docker.
 Backend phải truy cập được từ server Vercel. Không đặt upstream trỏ về admin.
 
 Proxy này áp dụng cho HTTP API và ảnh; Socket.io/WebRTC signaling vẫn cần backend

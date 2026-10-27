@@ -1,9 +1,7 @@
 import { io, Socket } from 'socket.io-client'
-import { getSocketBaseUrl } from '@/config/backend'
+import { getSocketBaseUrl } from '@/lib/api-client'
 
 let socketInstance: Socket | null = null
-
-export { getSocketBaseUrl } from '@/config/backend'
 
 export function getRealtimeSocket(): Socket {
   if (!socketInstance) {
@@ -32,14 +30,9 @@ export function getRealtimeSocket(): Socket {
   return socketInstance
 }
 
-/** Alias cho getRealtimeSocket để tương thích ngược */
-export const getAppointmentsSocket = getRealtimeSocket
-
 export function closeRealtimeSocket(): void {
   if (socketInstance) {
     socketInstance.disconnect()
     socketInstance = null
   }
 }
-
-export const closeAppointmentsSocket = closeRealtimeSocket

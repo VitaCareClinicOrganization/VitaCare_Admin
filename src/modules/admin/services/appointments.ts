@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 async function appointmentRequest(config, fallback) {
   try { return await apiRequest(config) }

@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 const call = async (config, fallback) => { try { return await apiRequest(config) } catch (error) { throw new Error(apiErrorMessage(error, fallback)) } }
 export const listClinicalRooms = () => call({ method: 'GET', url: '/clinical-queue/rooms' }, 'Không lấy được danh sách phòng.')
 export const receiveClinicalQr = ({ qrPayload }) => call({ method: 'POST', url: '/clinical-queue/receive', data: { qrPayload } }, 'Không tiếp nhận được phiếu chỉ định.')

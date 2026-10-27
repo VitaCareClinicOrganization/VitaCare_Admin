@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 export async function listSpecialties(branchId?: string) {
   try {

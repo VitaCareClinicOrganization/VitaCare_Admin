@@ -2,7 +2,8 @@
 
 import { useRef, useState, useId } from 'react'
 import { Upload, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { resolveMediaUrl, uploadMediaFile } from '@/modules/admin/services/media'
+import { resolveMediaUrl } from '@/lib/api-client'
+import { uploadMediaFile } from '@/modules/admin/services/media'
 
 interface ImageUploaderProps {
   value?: string

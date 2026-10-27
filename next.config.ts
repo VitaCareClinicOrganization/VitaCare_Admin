@@ -1,9 +1,5 @@
 import type { NextConfig } from 'next'
-import { API_BASE_PATH, MEDIA_PATHS, getBackendOrigin } from './src/config/backend'
-
-// Server-side upstream. Keep browser requests on the admin origin, including
-// when an existing Vercel NEXT_PUBLIC_API_URL still points to an HTTP backend.
-const backendOrigin = getBackendOrigin(process.env.BACKEND_API_URL || undefined)
+import { API_BASE_PATH, MEDIA_PATHS, BACKEND_ORIGIN } from './src/lib/api-client'
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -15,7 +11,7 @@ const nextConfig: NextConfig = {
   ],
   async rewrites() {
     return [API_BASE_PATH, ...MEDIA_PATHS].map(path => ({
-      source: `${path}/:path*`, destination: `${backendOrigin}${path}/:path*`,
+      source: `${path}/:path*`, destination: `${BACKEND_ORIGIN}${path}/:path*`,
     }))
   },
   async headers() {

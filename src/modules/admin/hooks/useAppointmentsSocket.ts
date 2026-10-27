@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { getAppointmentsSocket } from '../services/socket'
+import { getRealtimeSocket } from '../services/socket'
 
 export interface AppointmentBookedEvent {
   appointmentId: string
@@ -51,7 +51,7 @@ export function useAppointmentsSocket({
   useEffect(() => {
     if (!enabled) return
 
-    const socket = getAppointmentsSocket()
+    const socket = getRealtimeSocket()
 
     const handleBooked = (data: AppointmentBookedEvent) => {
       console.log('[Realtime] Received appointment:booked', data)

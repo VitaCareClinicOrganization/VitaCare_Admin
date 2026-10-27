@@ -17,7 +17,9 @@ import {
   AdminModal,
   StatusBadge,
 } from '@/common/components/ui'
-import { listReceptionAppointments, recordAppointmentPayment, listCatalog } from '../services/billingService'
+import { listReceptionAppointments } from '@/modules/admin/services/appointments'
+import { recordAppointmentPayment } from '@/modules/admin/services/payments'
+import { listCatalog } from '@/modules/catalog/services/catalogService'
 import { staffRole } from '@/modules/admin/utils/staffSession'
 
 type AppointmentRow = Record<string, any>

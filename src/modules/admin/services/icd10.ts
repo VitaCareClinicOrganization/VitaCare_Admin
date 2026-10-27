@@ -1,4 +1,4 @@
-import { apiErrorMessage, apiRequest } from './apiBase'
+import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 export async function searchIcd10({ token, q, limit = 20, deptID }) {
   const qs = new URLSearchParams()
