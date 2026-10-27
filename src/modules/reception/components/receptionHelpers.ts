@@ -111,13 +111,6 @@ export function doctorDisplayName(d: any): string {
   return `${last} ${first}`.trim() || String(d.email || '').trim() || '—'
 }
 
-export function clinicRoomLabel(roomId: string, rooms: any[]): string {
-  const id = String(roomId || '').trim()
-  if (!id) return '—'
-  const hit = (rooms || []).find((r: any) => String(r.id || r.roomID) === id)
-  return hit?.name ? String(hit.name).trim() : id
-}
-
 export function mergeReceptionDetail(cached: any, row: any) {
   if (!row) return cached ?? null
   if (!cached) return row
@@ -151,6 +144,7 @@ export function mergeReceptionDetail(cached: any, row: any) {
     specialty: row.specialty ?? cached.specialty,
     servicePackage: row.servicePackage ?? cached.servicePackage,
     bookingMethod: row.bookingMethod ?? cached.bookingMethod,
+    isTelehealth: row.isTelehealth ?? cached.isTelehealth,
     branch: row.branch ?? cached.branch,
     clinicRoomName: row.clinicRoomName || cached.clinicRoomName,
     ticket: row.ticket || cached.ticket,
@@ -181,13 +175,12 @@ export function formatExamTimeLine(start: any, end?: string): string {
   return e && e !== s ? `${s} – ${e}` : s
 }
 
-export function buildVisitSlipView(detail: any, rooms: any[], overrides: any = {}) {
+export function buildVisitSlipView(detail: any, overrides: any = {}) {
   if (!detail) return null
-  const roomId = String(overrides.clinicRoom ?? detail.clinicRoom ?? '').trim()
   let q = overrides.visitQueueNumber ?? detail.visitQueueNumber
   if (q === '' || q == null) q = null
   const patientName = patientListDisplayName(detail.patient)
-  const clinicRoom = roomId ? clinicRoomLabel(roomId, rooms) : '—'
+  const clinicRoom = String(detail.clinicRoomName || '').trim() || '—'
   const doctorName = doctorDisplayName(detail.doctor)
   const examTime = formatExamTimeLine(detail.startTime, detail.endTime)
   const examDate = formatDateVi(detail.appointmentDate)
@@ -289,7 +282,7 @@ export function statusLabelVi(st: string): string {
 export function receptionStatusMeta(row: any): { label: string; tone: string } {
   const workflow = String(row?.workflowStatus || '').toUpperCase()
   if (workflow === 'HOLD') return { label: 'Chờ thanh toán', tone: 'pending' }
-  if (workflow === 'CONFIRMED') return { label: 'Chờ check-in', tone: 'booked' }
+  if (workflow === 'CONFIRMED') return { label: row?.isTelehealth || row?.bookingMethod?.code === 'ONLINE_CONSULTATION' ? 'Chờ tư vấn online' : 'Chờ check-in', tone: 'booked' }
   if (workflow === 'CHECKED_IN') return { label: 'Đã check-in', tone: 'checked-in' }
   if (workflow === 'COMPLETED') return { label: 'Đã khám', tone: 'completed' }
   if (workflow === 'CANCELLED') return { label: 'Đã hủy', tone: 'cancelled' }
@@ -424,6 +417,7 @@ export function normalizeLookup(raw: any) {
     ticket: ap.ticket,
     status: ap.status,
     workflowStatus: ap.workflowStatus,
+    isTelehealth: ap.isTelehealth,
     appointmentDate: ap.appointmentDate,
     startTime: ap.startTime,
     endTime: ap.endTime,

@@ -22,6 +22,16 @@ export async function fetchDashboardStats({
   }
 }
 
+export async function fetchBranchComparison({ timeFilter = 'month', startDate, endDate }: {
+  timeFilter?: string; startDate?: string; endDate?: string
+} = {}) {
+  try {
+    return await apiRequest({ method: 'GET', url: '/stats/branch-comparison', params: { timeFilter, startDate, endDate } })
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Không tải được dữ liệu so sánh chi nhánh.'))
+  }
+}
+
 export async function fetchAnalyticsData({
   token,
   timeFilter = 'month',
@@ -51,18 +61,24 @@ export async function fetchAnalyticsData({
 
 export async function fetchDemandInsights({
   token,
-  timeFilter = '30days',
+  timeFilter = 'month',
   branchId,
+  startDate,
+  endDate,
 }: {
   token?: string
-  timeFilter?: 'today' | '7days' | '30days'
+  timeFilter?: 'today' | 'week' | 'month' | 'quarter' | '7days' | '30days' | string
   branchId?: string
+  startDate?: string
+  endDate?: string
 } = {}) {
   try {
     const headers: Record<string, string> = {}
     if (token) headers.Authorization = `Bearer ${token}`
     const params: Record<string, any> = { timeFilter }
     if (branchId && branchId !== 'all') params.branchId = branchId
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
 
     return await apiRequest({ method: 'GET', url: '/stats/demand-insights', headers, params })
   } catch (error) {
@@ -72,13 +88,17 @@ export async function fetchDemandInsights({
 
 export async function fetchAiExecutiveReport({
   token,
-  timeFilter = '30days',
+  timeFilter = 'month',
   branchId,
+  startDate,
+  endDate,
   forceRefresh,
 }: {
   token?: string
-  timeFilter?: 'today' | '7days' | '30days' | string
+  timeFilter?: 'today' | 'week' | 'month' | 'quarter' | '7days' | '30days' | string
   branchId?: string
+  startDate?: string
+  endDate?: string
   forceRefresh?: boolean
 } = {}) {
   try {
@@ -86,6 +106,8 @@ export async function fetchAiExecutiveReport({
     if (token) headers.Authorization = `Bearer ${token}`
     const params: Record<string, any> = { timeFilter }
     if (branchId && branchId !== 'all') params.branchId = branchId
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
     if (forceRefresh) params.forceRefresh = true
 
     return await apiRequest({ method: 'GET', url: '/stats/ai-executive-report', headers, params })
@@ -115,7 +137,7 @@ export async function fetchReceptionSummary({
     if (date) params.date = date
     if (branchId && branchId !== 'all') params.branchId = branchId
 
-    return await apiRequest({ method: 'GET', url: '/appointments/reception-summary', headers, params })
+    return await apiRequest({ method: 'GET', url: '/stats/reception-summary', headers, params })
   } catch (error) {
     throw new Error(apiErrorMessage(error, 'Không tải được báo cáo ca trực tiếp đón.'))
   }
