@@ -97,23 +97,23 @@ export default function CopyWeekModal({
     >
       <div className="space-y-4">
         {error && (
-          <div className="flex items-center gap-2 rounded border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
+          <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
             <span>{error}</span>
           </div>
         )}
 
         {resultMsg && (
-          <div className="flex items-center gap-2 rounded border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800">
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800">
             <Check className="h-4 w-4 shrink-0 text-emerald-600" />
             <span className="font-semibold">{resultMsg}</span>
           </div>
         )}
 
         {/* Visual comparison */}
-        <div className="rounded border border-slate-200 bg-slate-50/80 p-3.5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-            <div className="rounded border border-slate-200 bg-white p-3 text-center">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Tuần nguồn
               </span>
@@ -127,7 +127,7 @@ export default function CopyWeekModal({
               <ArrowRight className="h-4 w-4" />
             </div>
 
-            <div className="rounded border border-emerald-300 bg-emerald-50/60 p-3 text-center">
+            <div className="rounded-xl border border-emerald-300 bg-emerald-50/60 p-3 text-center">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-800">
                 Tuần đích
               </span>
@@ -149,7 +149,7 @@ export default function CopyWeekModal({
             <button
               type="button"
               onClick={() => setOffsetWeeks(1)}
-              className={`rounded border py-2 text-xs font-bold transition cursor-pointer ${
+              className={`rounded-xl border py-2 text-xs font-bold transition cursor-pointer ${
                 offsetWeeks === 1
                   ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-2xs'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -160,7 +160,7 @@ export default function CopyWeekModal({
             <button
               type="button"
               onClick={() => setOffsetWeeks(2)}
-              className={`rounded border py-2 text-xs font-bold transition cursor-pointer ${
+              className={`rounded-xl border py-2 text-xs font-bold transition cursor-pointer ${
                 offsetWeeks === 2
                   ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-2xs'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -171,7 +171,7 @@ export default function CopyWeekModal({
             <button
               type="button"
               onClick={() => setOffsetWeeks(3)}
-              className={`rounded border py-2 text-xs font-bold transition cursor-pointer ${
+              className={`rounded-xl border py-2 text-xs font-bold transition cursor-pointer ${
                 offsetWeeks === 3
                   ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-2xs'
                   : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -197,7 +197,7 @@ export default function CopyWeekModal({
         </AdminSelect>
 
         {/* Notice note */}
-        <div className="flex items-start gap-2 rounded border border-blue-100 bg-blue-50/70 p-2.5 text-xs text-blue-800">
+        <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/70 p-2.5 text-xs text-blue-800">
           <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
           <div className="leading-relaxed">
             Hệ thống sẽ giữ nguyên bác sĩ, phòng khám, khung giờ và thời lượng khám. Các ca trực đã trùng hoặc ngày bác sĩ xin nghỉ phép sẽ tự động được bỏ qua an toàn.

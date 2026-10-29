@@ -19,8 +19,8 @@ import {
 } from '@/common/components/ui'
 import { listReceptionAppointments } from '@/modules/admin/services/appointments'
 import { recordAppointmentPayment } from '@/modules/admin/services/payments'
-import { listCatalog } from '@/modules/catalog/services/catalogService'
 import { staffRole } from '@/modules/admin/utils/staffSession'
+import MyCollectionsPanel from '../components/MyCollectionsPanel'
 
 type AppointmentRow = Record<string, any>
 const money = (val: any) => `${Number(val || 0).toLocaleString('vi-VN')} đ`
@@ -37,15 +37,21 @@ const TABLE_COLUMNS = [
 
 export default function BillingPage() {
   const { user, token } = useAuth()
-  const isStaff = ['receptionist', 'admin', 'branch_manager'].includes(staffRole(user))
+  const role = staffRole(user)
+  const isReceptionist = role === 'receptionist'
+  const canViewRevenue = ['admin', 'branch_manager'].includes(role)
+  const isStaff = ['receptionist', 'admin', 'branch_manager'].includes(role)
+  const tableColumns = isReceptionist ? [...TABLE_COLUMNS.slice(0, 5), 'Hình thức thu', ...TABLE_COLUMNS.slice(5)] : TABLE_COLUMNS
+  const columnCount = tableColumns.length
 
   const [appointments, setAppointments] = useState<AppointmentRow[]>([])
-  const [branches, setBranches] = useState<any[]>([])
   const [selectedBranchId, setSelectedBranchId] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [view, setView] = useState<'invoices' | 'mine'>('invoices')
+  const [collectionsRefreshKey, setCollectionsRefreshKey] = useState(0)
 
   const [selectedItem, setSelectedItem] = useState<AppointmentRow | null>(null)
   const [payMethod, setPayMethod] = useState<'cash' | 'transfer'>('cash')
@@ -56,22 +62,34 @@ export default function BillingPage() {
     setLoading(true)
     setError('')
     try {
-      const [appData, branchData] = await Promise.all([
-        listReceptionAppointments({ q, status: 'all' }),
-        listCatalog('branches').catch(() => []),
-      ])
+      const appData = await listReceptionAppointments({ q: '', status: 'all', paymentChannel: isReceptionist ? 'counter' : undefined })
       setAppointments(appData || [])
-      setBranches(branchData || [])
+      setCollectionsRefreshKey(value => value + 1)
     } catch (e: any) {
       setError(e?.message || 'Không tải được danh sách hóa đơn.')
     } finally {
       setLoading(false)
     }
-  }, [q])
+  }, [isReceptionist])
 
   useEffect(() => {
     void loadData()
   }, [loadData])
+
+  // Danh sách lịch hẹn đã được API giới hạn theo chi nhánh phụ trách.
+  const branches = useMemo(() => {
+    const scopedBranches = new Map<string, { id: string; name: string }>()
+    appointments.forEach(item => {
+      if (item.branch?.id) scopedBranches.set(item.branch.id, item.branch)
+    })
+    return [...scopedBranches.values()]
+  }, [appointments])
+
+  useEffect(() => {
+    if (selectedBranchId && !branches.some(branch => branch.id === selectedBranchId)) {
+      setSelectedBranchId('')
+    }
+  }, [branches, selectedBranchId])
 
   const getPatientName = (it: AppointmentRow) =>
     it.patient?.fullName || it.patient?.name || it.patientProfile?.fullName || 'Bệnh nhân'
@@ -85,11 +103,13 @@ export default function BillingPage() {
   const isPaid = (it: AppointmentRow) => {
     const inv = (it.invoice?.status || '').toUpperCase()
     const pay = (it.payment?.status || '').toLowerCase()
-    const wf = (it.workflowStatus || '').toUpperCase()
-    return inv === 'PAID' || pay === 'paid' || ['COMPLETED', 'CHECKED_IN', 'CONFIRMED'].includes(wf)
+    return !isCancelled(it) && (inv === 'PAID' || pay === 'paid' || it.payment?.paid === true)
   }
   const isPending = (it: AppointmentRow) =>
-    !isPaid(it) && ((it.workflowStatus || '').toUpperCase() === 'HOLD' || it.payment?.status === 'unpaid')
+    !isCancelled(it) && !isPaid(it) && (
+      (it.invoice?.status || '').toUpperCase() === 'UNPAID' ||
+      it.payment?.status === 'unpaid' || ['HOLD', 'CONFIRMED'].includes((it.workflowStatus || '').toUpperCase())
+    )
   const isCancelled = (it: AppointmentRow) =>
     (it.workflowStatus || '').toUpperCase() === 'CANCELLED' ||
     (it.invoice?.status || '').toUpperCase() === 'CANCELLED'
@@ -118,15 +138,14 @@ export default function BillingPage() {
     let pend = 0
     let canc = 0
     filtered.forEach((it) => {
-      const amt = getAmount(it)
       if (isPaid(it)) {
-        rev += amt
+        if (canViewRevenue) rev += getAmount(it)
         paid++
       } else if (isPending(it)) pend++
       else if (isCancelled(it)) canc++
     })
     return { total: filtered.length, rev, paid, pend, canc }
-  }, [filtered])
+  }, [filtered, canViewRevenue])
 
   const handleConfirmPayment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -161,15 +180,18 @@ export default function BillingPage() {
   return (
     <>
       <AdminPageHeader
-        eyebrow="Quản lý tài chính"
-        title={staffRole(user) === 'branch_manager' ? 'Thanh toán & Doanh thu' : 'Thanh toán & Hóa đơn'}
-        description="Theo dõi doanh thu, thu tiền trực tiếp và đối soát viện phí."
+        eyebrow={isReceptionist ? 'Thu phí tại quầy' : 'Quản lý tài chính'}
+        title={isReceptionist ? 'Thu phí' : role === 'branch_manager' ? 'Thanh toán & Doanh thu' : 'Thanh toán & Hóa đơn'}
+        description={isReceptionist ? 'Thu tiền mặt hoặc chuyển khoản tại quầy; tra cứu hóa đơn chưa thu và các khoản đã thu tại quầy.' : 'Theo dõi doanh thu, thu tiền trực tiếp và đối soát viện phí.'}
       >
         <AdminButton
           variant="secondary"
           icon={RefreshCw}
           loading={loading}
-          onClick={() => void loadData()}
+          onClick={() => {
+            if (isReceptionist && view === 'mine') setCollectionsRefreshKey(value => value + 1)
+            else void loadData()
+          }}
         >
           Làm mới dữ liệu
         </AdminButton>
@@ -182,13 +204,22 @@ export default function BillingPage() {
         </div>
       )}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard
-          label="Doanh thu đã thu"
-          value={money(stats.rev)}
-          detail={`${stats.paid} hóa đơn thành công`}
-          tone="emerald"
-        />
+      {isReceptionist && <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Nội dung thu phí">
+        {([['invoices', 'Thu phí bệnh nhân'], ['mine', 'Lịch sử thu tiền của tôi']] as const).map(([value, label]) => (
+          <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)} className={`rounded border px-4 py-2 text-xs font-semibold cursor-pointer ${view === value ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>{label}</button>
+        ))}
+      </div>}
+
+      {isReceptionist && view === 'mine' ? <MyCollectionsPanel refreshKey={collectionsRefreshKey} /> : <>
+      <div className={`mt-5 grid gap-4 sm:grid-cols-2 ${canViewRevenue ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
+        {canViewRevenue && (
+          <AdminStatCard
+            label="Doanh thu đã thu"
+            value={money(stats.rev)}
+            detail={`${stats.paid} hóa đơn thành công`}
+            tone="emerald"
+          />
+        )}
         <AdminStatCard
           label="Đã thanh toán"
           value={stats.paid}
@@ -218,12 +249,14 @@ export default function BillingPage() {
           />
           <div className="flex gap-2 w-full sm:w-auto">
             <select
+              aria-label="Lọc hóa đơn theo chi nhánh phụ trách"
               value={selectedBranchId}
               onChange={(e) => setSelectedBranchId(e.target.value)}
+              disabled={branches.length <= 1}
               className="text-xs rounded border border-slate-200 px-2.5 py-1.5 bg-white"
             >
-              <option value="">Tất cả cơ sở</option>
-              {branches.map((b) => (
+              <option value="">{branches.length === 1 ? branches[0].name : branches.length > 1 ? 'Tất cả chi nhánh phụ trách' : 'Chưa có dữ liệu chi nhánh'}</option>
+              {branches.length > 1 && branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>
@@ -242,12 +275,12 @@ export default function BillingPage() {
         </div>
 
         <AdminTable minWidth="min-w-[850px]">
-          <AdminTableHead columns={TABLE_COLUMNS} />
+          <AdminTableHead columns={tableColumns} />
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <AdminTableLoading colSpan={7} message="Đang tải danh sách hóa đơn…" />
+              <AdminTableLoading colSpan={columnCount} message="Đang tải danh sách hóa đơn…" />
             ) : filtered.length === 0 ? (
-              <AdminTableEmpty colSpan={7} message="Chưa có dữ liệu hóa đơn phù hợp." />
+              <AdminTableEmpty colSpan={columnCount} message="Chưa có dữ liệu hóa đơn phù hợp." />
             ) : (
               filtered.map((it) => {
                 const paid = isPaid(it)
@@ -277,6 +310,9 @@ export default function BillingPage() {
                     <td className="px-5 py-3.5 text-right font-extrabold text-slate-900 text-xs tabular-nums">
                       {money(amt)}
                     </td>
+                    {isReceptionist && <td className="px-5 py-3.5 text-xs text-slate-700">
+                      {String(it.payment?.method || '').toLowerCase() === 'cash' ? 'Tiền mặt' : String(it.payment?.method || '').toLowerCase() === 'vietqr' ? 'Chuyển khoản tại quầy' : 'Chưa thu'}
+                    </td>}
                     <td className="px-5 py-3.5 text-center">
                       <StatusBadge
                         tone={paid ? 'emerald' : pending ? 'amber' : canc ? 'slate' : 'blue'}
@@ -319,6 +355,7 @@ export default function BillingPage() {
         </AdminTable>
         <AdminTableFooter total={filtered.length} label="hóa đơn" />
       </AdminTableCard>
+      </>}
 
       {/* DETAIL & PAYMENT MODAL */}
       <AdminModal

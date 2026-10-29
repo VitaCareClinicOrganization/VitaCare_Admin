@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@/common/hooks/useNextNavigation'
 import { useAuth } from '@/common/hooks/useAuth'
+import { useStaffLogout } from '@/common/hooks/useStaffLogout'
 import { AdminAnalyticsPage, Sparkline, DonutChart, KpiMetricCard, SectionCard as Card } from '@/modules/analytics'
 import { fetchDashboardStats } from '@/modules/admin/services/stats'
 import {
@@ -27,6 +28,8 @@ import { AdminModal, AdminButton } from '@/common/components/ui'
 import SystemAdminDashboard from '../components/SystemAdminDashboard'
 import SystemLogsPage from '../components/SystemLogsPage'
 import IntegrationsPage from '../components/IntegrationsPage'
+import StaffProfilePage from './StaffProfilePage'
+import RoleSidebar, { StaffMobileHeader } from '../components/RoleSidebar'
 import BranchOverviewCharts from '../components/BranchOverviewCharts'
 import {
   LayoutDashboard,
@@ -56,6 +59,7 @@ import {
   Clock,
   Eye,
   Phone,
+  Loader2,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -65,54 +69,6 @@ const ROLE_LABELS: Record<string, string> = {
   branch_manager: 'Quản lý chi nhánh',
   receptionist: 'Tiếp nhận',
   doctor: 'Bác sĩ',
-}
-
-const NAV: Record<string, [string, string, string][]> = {
-  chain_manager: [
-    ['dashboard', 'Tổng quan toàn chuỗi', '/dashboard'],
-    ['analytics', 'Thống kê toàn chuỗi', '/analytics'],
-    ['branches', 'Chi nhánh phòng khám', '/branches'],
-    ['booking-methods', 'Hình thức đặt khám', '/booking-methods'],
-    ['booking-packages', 'Danh mục gói khám', '/booking-packages'],
-    ['specialties', 'Danh mục chuyên khoa', '/specialties'],
-    ['slots', 'Theo dõi lịch bác sĩ', '/work-schedules'],
-    ['staff', 'Nhân sự toàn chuỗi', '/staff'],
-  ],
-  admin: [
-    ['dashboard', 'Tổng quan hệ thống', '/dashboard'],
-    ['branches', 'Chi nhánh phòng khám', '/branches'],
-    ['booking-packages', 'Quản lý gói khám', '/booking-packages'],
-    ['specialties', 'Danh mục chuyên khoa', '/specialties'],
-    ['staff', 'Tài khoản & Nhân sự', '/staff'],
-    ['roles', 'Vai trò & Phân quyền', '/roles-permissions'],
-    ['system-logs', 'Nhật ký & Lỗi hệ thống', '/system-logs'],
-    ['integrations', 'Cấu hình tích hợp', '/integrations'],
-  ],
-  branch_manager: [
-    ['dashboard', 'Tổng quan', '/dashboard'],
-    ['analytics', 'Thống kê', '/analytics'],
-    ['appointments', 'Danh sách lịch hẹn', '/appointments'],
-    ['booking-packages', 'Gói khám tại chi nhánh', '/booking-packages'],
-    ['specialties', 'Chuyên khoa tại chi nhánh', '/specialties'],
-    ['patients', 'Hồ sơ bệnh nhân', '/patients'],
-    ['slots', 'Lịch làm việc bác sĩ', '/work-schedules'],
-    ['billing', 'Thanh toán & Doanh thu', '/billing'],
-    ['branches', 'Thông tin chi nhánh', '/branches'],
-  ],
-  receptionist: [
-    ['dashboard', 'Tổng quan tiếp đón', '/dashboard'],
-    ['reception', 'Tiếp nhận bệnh nhân', '/reception'],
-    ['patients', 'Danh bạ bệnh nhân', '/reception/patients'],
-    ['registration', 'Đăng ký bệnh nhân', '/registration'],
-    ['appointments', 'Danh sách lịch hẹn', '/appointments'],
-    ['billing', 'Thanh toán', '/billing'],
-  ],
-  doctor: [
-    ['schedule', 'Lịch khám', '/doctor'],
-    ['waiting', 'Chờ khám bệnh', '/doctor?view=waiting'],
-    ['slots', 'Lịch làm việc', '/doctor?view=schedule'],
-    ['history', 'Lịch sử bệnh nhân', '/doctor?view=history'],
-  ],
 }
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -874,6 +830,7 @@ const MANAGER_NAV_SECTIONS = [
 ]
 
 function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, logout }: any) {
+  const { isLoggingOut } = useAuth()
   const sections = role === 'admin' ? TECHNICAL_NAV_SECTIONS : role === 'chain_manager' ? CHAIN_NAV_SECTIONS : MANAGER_NAV_SECTIONS
   const roleTitle = ROLE_LABELS[role] || 'Quản trị viên'
   const go = (href: string) => { navigate(href); setMenu(false) }
@@ -938,7 +895,7 @@ function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, 
         </nav>
 
         <div className="border-t border-slate-100 p-3 bg-white space-y-2">
-          <div className="flex items-center gap-3 rounded bg-slate-50 p-2.5 border border-slate-200/80">
+          <button type="button" onClick={() => go('/profile')} aria-label="Xem thông tin cá nhân" aria-current={section === 'profile' ? 'page' : undefined} className="flex w-full items-center gap-3 rounded-lg bg-slate-50 p-2.5 border border-slate-200/80 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--clinic-primary)]">
             <span className="grid h-8 w-8 place-items-center rounded bg-emerald-100 text-xs font-bold text-emerald-800 shrink-0">{initials(user)}</span>
             <div className="min-w-0 flex-1">
               <strong className="text-xs font-bold text-slate-800 truncate block">{user?.fullName || user?.displayName || 'Nhân viên'}</strong>
@@ -952,15 +909,17 @@ function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, 
                   `${roleTitle} · VitaCare`
                 )}
               </p>
+              <span className="mt-1 block text-[10px] font-semibold text-[var(--clinic-primary)]">Xem thông tin cá nhân →</span>
             </div>
-          </div>
+          </button>
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors cursor-pointer"
+            disabled={isLoggingOut}
+            className="flex w-full items-center justify-center gap-2 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <LogOut className="w-4 h-4" />
-            <span>Đăng xuất</span>
+            {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+            <span>{isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
           </button>
         </div>
       </aside>
@@ -996,7 +955,8 @@ function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, 
 
 export default function RolePortal({ section = 'dashboard' }: { section?: string }) {
   const navigate = useNavigate()
-  const { token, user, logout: clearAuthSession } = useAuth()
+  const { token, user } = useAuth()
+  const { performLogout: logout } = useStaffLogout()
   const role = staffRole(user) || 'admin'
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1007,13 +967,6 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
     fetchDashboardStats({ token }).then(setStats).catch(() => setStats(null)).finally(() => setLoading(false))
   }, [token, role])
 
-  const logout = async () => {
-    await clearAuthSession()
-    navigate('/login', { replace: true })
-  }
-
-  const nav = NAV[role] || NAV.admin
-
   const managerBranchId =
     role === 'branch_manager'
       ? (user?.branchAssignments?.find((b: any) => b.isPrimary)?.branchId ||
@@ -1023,6 +976,7 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
       : undefined
 
   const content =
+    section === 'profile' ? <StaffProfilePage /> :
     role === 'branch_manager' && ['dashboard', 'analytics'].includes(section) ? <ManagerDashboard stats={stats} loading={loading} user={user} section={section} /> :
     section === 'system-logs' ? <SystemLogsPage /> :
       section === 'integrations' ? <IntegrationsPage /> :
@@ -1046,59 +1000,16 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
 
   return (
     <div className="min-h-screen bg-[#f5f8f5] text-slate-800">
-      <aside className={`fixed inset-y-0 left-0 z-30 flex w-[244px] flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0 ${menu ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex h-[76px] items-center justify-between border-b border-slate-100 px-4">
-          <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-50/60 flex-1 min-w-0" onClick={() => { navigate('/dashboard'); setMenu(false) }}>
-            <img src="/imgs/logo/logo2.png" alt="VitaCare Clinic" className="h-11 w-11 object-contain shrink-0" />
-            <div className="min-w-0 flex-1">
-              <strong className="text-sm font-extrabold text-emerald-800 tracking-tight block truncate">VitaCare Clinic</strong>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">{ROLE_LABELS[role]}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setMenu(false)}
-            className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer shrink-0 ml-1"
-            aria-label="Đóng menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          <p className="px-3 pb-2 pt-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Không gian làm việc</p>
-          {nav.map(([id, label, href]) => (
-            <button key={id} onClick={() => { navigate(href); setMenu(false) }} className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left text-xs font-semibold transition cursor-pointer ${section === id ? 'bg-emerald-50 font-bold text-emerald-800' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
-              <Icon name={id} />{label}
-            </button>
-          ))}
-        </nav>
-        <div className="border-t border-slate-100 p-3 bg-white space-y-2">
-          <div className="flex items-center gap-3 rounded bg-slate-50 p-2.5 border border-slate-200/80">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 shrink-0">{initials(user)}</span>
-            <div className="min-w-0 flex-1">
-              <strong className="text-xs font-bold text-slate-800 truncate block">{user?.fullName || user?.email || 'Nhân viên'}</strong>
-              <p className="text-[10px] text-slate-400 truncate">{ROLE_LABELS[role]} · VitaCare</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Đăng xuất</span>
-          </button>
-        </div>
-      </aside>
-      {menu && <button aria-label="Đóng menu" className="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-xs lg:hidden" onClick={() => setMenu(false)} />}
+      <RoleSidebar
+        role={role}
+        active={section}
+        user={user}
+        onLogout={logout}
+        isOpen={menu}
+        onClose={() => setMenu(false)}
+      />
       <div className="lg:pl-[244px]">
-        <div className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-          <div className="flex items-center gap-2.5">
-            <button onClick={() => setMenu(true)} className="rounded border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 cursor-pointer" aria-label="Mở menu"><Menu className="h-5 w-5" /></button>
-            <span className="text-sm font-bold text-slate-800">VitaCare Clinic</span>
-          </div>
-          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">{ROLE_LABELS[role] || 'Nhân viên'}</span>
-        </div>
+        <StaffMobileHeader onOpenMenu={() => setMenu(true)} roleTitle={ROLE_LABELS[role] || 'Nhân viên'} />
         <main className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-7">{content}</main>
       </div>
     </div>

@@ -49,7 +49,7 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
   }, [])
 
   const loadAnalytics = useCallback(async () => {
-    if (activeTab === 'branch_comparison') { setFetching(false); return }
+    if (activeTab === 'branch_comparison' || activeTab === 'demand_ai') { setFetching(false); return }
     setFetching(true)
     try {
       const res = await fetchAnalyticsData({
@@ -139,7 +139,7 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
           </div>
 
           {/* Cụm Nút Xuất Thống Kê & Nút Làm Mới */}
-          <div className={activeTab === 'branch_comparison' ? 'hidden' : 'flex items-center gap-2'}>
+          <div className={activeTab === 'branch_comparison' || activeTab === 'demand_ai' ? 'hidden' : 'flex items-center gap-2'}>
             <button
               type="button"
               onClick={() => void loadAnalytics()}

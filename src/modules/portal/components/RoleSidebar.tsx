@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useNavigate } from '@/common/hooks/useNextNavigation'
+import { useAuth } from '@/common/hooks/useAuth'
 
 import {
   LayoutDashboard,
@@ -18,6 +19,9 @@ import {
   LogOut,
   X,
   Menu,
+  ChevronRight,
+  CreditCard,
+  Loader2,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -33,6 +37,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   reception: DoorOpen,
   registration: UserPlus,
   patients: Users,
+  billing: CreditCard,
 }
 
 export interface StaffMobileHeaderProps {
@@ -90,6 +95,7 @@ export default function RoleSidebar({
   onClose,
 }: RoleSidebarProps) {
   const navigate = useNavigate()
+  const { isLoggingOut } = useAuth()
   const [internalOpen, setInternalOpen] = useState(false)
   const open = isOpen !== undefined ? isOpen : internalOpen
   const handleClose = onClose || (() => setInternalOpen(false))
@@ -100,13 +106,14 @@ export default function RoleSidebar({
         ['calendar', 'Lịch khám', '/doctor'],
         ['waiting', 'Chờ khám bệnh', '/doctor?view=waiting'],
         ['schedule', 'Lịch làm việc', '/doctor?view=schedule'],
-        ['history', 'Lịch sử bệnh nhân', '/doctor?view=history'],
+        ['history', 'Lịch sử khám', '/doctor?view=history'],
       ]
     : [
         ['dashboard', 'Tổng quan', '/dashboard'],
         ['reception', 'Tiếp nhận', '/reception'],
         ['patients', 'Bệnh nhân', '/reception/patients'],
         ['registration', 'Đăng ký bệnh nhân', '/registration'],
+        ['billing', 'Thu phí', '/billing'],
       ]
 
   const name = String(user?.fullName || user?.displayName || user?.email || (doctor ? 'Bác sĩ' : 'Nhân viên'))
@@ -157,7 +164,7 @@ export default function RoleSidebar({
           <button
             type="button"
             onClick={handleClose}
-            className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer shrink-0 ml-1"
+            className={`p-1.5 ${doctor ? 'rounded-xl' : 'rounded'} text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer shrink-0 ml-1`}
             aria-label="Đóng menu"
           >
             <X className="w-5 h-5" />
@@ -182,7 +189,8 @@ export default function RoleSidebar({
               <button
                 key={id}
                 type="button"
-                className={`flex w-full items-center gap-3 rounded px-3 py-2.5 text-left text-[13px] transition cursor-pointer ${
+                aria-current={active === id || (active === 'exam' && id === 'calendar') ? 'page' : undefined}
+                className={`flex w-full items-center gap-3 ${doctor ? 'rounded-xl' : 'rounded'} px-3 py-2.5 text-left text-[13px] transition cursor-pointer ${
                   active === id || (active === 'exam' && id === 'calendar')
                     ? 'bg-emerald-50 font-bold text-emerald-800'
                     : 'font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -198,30 +206,36 @@ export default function RoleSidebar({
 
         {/* Góc menu dưới: Thông tin phòng khám/nhân viên & nút Đăng xuất */}
         <div className="border-t border-slate-100 p-3 bg-white space-y-2">
-          <div className="flex items-start gap-3 rounded bg-slate-50 p-2.5 border border-slate-200/80">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleNav('/profile')}
+            aria-label={`Xem thông tin cá nhân của ${name}`}
+            title="Xem thông tin cá nhân"
+            aria-current={active === 'profile' ? 'page' : undefined}
+            className={`flex w-full items-center gap-2.5 ${doctor ? 'rounded' : 'rounded-xl'} border ${active === 'profile' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200/70 bg-white'} px-3 py-3 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--clinic-primary)]`}
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--clinic-primary-soft)] text-xs font-bold text-[var(--clinic-primary)] shrink-0">
               {avatar}
             </span>
             <div className="min-w-0 flex-1">
-              <b className="block whitespace-normal break-words text-xs font-bold leading-5 text-slate-800" title={name}>
+              <b className="block line-clamp-2 break-words text-xs font-semibold leading-5 text-slate-800" title={name}>
                 {name}
               </b>
-              <p className="whitespace-normal break-words text-[11px] font-semibold leading-4 text-emerald-700">
-                Phòng khám Đa khoa VitaCare
-              </p>
-              <p className="whitespace-normal break-words text-[10px] font-medium leading-4 text-slate-400">
-                Cơ sở chính · TP. Hồ Chí Minh
+              <p className="mt-0.5 text-[11px] leading-4 text-slate-500">
+                {doctor ? 'Bác sĩ' : 'Lễ tân & Tiếp nhận'}
               </p>
             </div>
-          </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          </button>
           <button
             type="button"
             onClick={onLogout}
-            className="flex w-full items-center justify-center gap-2 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors cursor-pointer shadow-2xs"
+            disabled={isLoggingOut}
+            className="flex w-full items-center justify-center gap-2 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors cursor-pointer shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed"
             title="Đăng xuất khỏi hệ thống"
           >
-            <LogOut className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-            <span>Đăng xuất</span>
+            {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <LogOut className="w-4 h-4" strokeWidth={2} aria-hidden="true" />}
+            <span>{isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
           </button>
         </div>
       </aside>

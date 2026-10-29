@@ -67,7 +67,7 @@ export default function ScheduleTableView({
                   </td>
                   <td className="px-5 py-3 whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                      className={`inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-bold ${
                         occupied === 0
                           ? 'bg-slate-100 text-slate-600'
                           : isFull

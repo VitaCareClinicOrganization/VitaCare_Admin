@@ -5,11 +5,20 @@ import { io, Socket } from "socket.io-client";
 import { getSocketBaseUrl } from "@/lib/api-client";
 
 export interface ChatMessage {
+  id?: string;
   senderId: string;
   senderName: string;
   senderRole: "DOCTOR" | "PATIENT";
   text: string;
   timestamp: string;
+}
+
+function mergeChatMessages(...groups: ChatMessage[][]): ChatMessage[] {
+  const unique = new Map<string, ChatMessage>();
+  for (const message of groups.flat()) {
+    unique.set(message.id || JSON.stringify([message.senderId, message.timestamp, message.text]), message);
+  }
+  return [...unique.values()];
 }
 
 export interface UseWebRTCOptions {
@@ -211,6 +220,7 @@ export function useWebRTC({
   // chạy khi mount, để đăng kí sự kiện
   useEffect(() => {
     if (!localStream) return;
+    setMessages([]);
 
     setConnectionStatus("connecting");
     const socketBase = getSocketBaseUrl(serverUrl);
@@ -237,6 +247,7 @@ export function useWebRTC({
     });
 
     socket.on("telehealth:joined-success", (data) => {
+      setMessages(previous => mergeChatMessages(data.messages || [], previous));
       if (data.otherPeer) {
         setIsPeerInRoom(true);
         setPeerInfo(data.otherPeer);
@@ -287,7 +298,7 @@ export function useWebRTC({
     });
 
     socket.on("telehealth:new-chat", (msg: ChatMessage) => {
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => mergeChatMessages(prev, [msg]));
     });
 
     socket.on("telehealth:call-ended", () => {
@@ -349,17 +360,18 @@ export function useWebRTC({
     }
   }, [localStream, appointmentId]);
 
-  const sendMessage = useCallback((text: string) => {
-    if (!text.trim() || !socketRef.current) return;
-
-    socketRef.current.emit("telehealth:send-chat", {
+  const sendMessage = useCallback((text: string) => new Promise<void>((resolve, reject) => {
+    const socket = socketRef.current;
+    if (!text.trim() || !socket?.connected) return reject(new Error('Chưa kết nối phòng tư vấn.'));
+    socket.timeout(10000).emit("telehealth:send-chat", {
       appointmentId,
-      senderId: userId,
-      senderName: userName,
-      senderRole: userRole,
       text: text.trim(),
+    }, (error: Error | null, result?: { success: boolean; message?: string }) => {
+      if (error) return reject(new Error('Chưa nhận được xác nhận gửi tin nhắn. Vui lòng kiểm tra kết nối.'));
+      if (!result?.success) return reject(new Error(result?.message || 'Không thể lưu tin nhắn. Vui lòng thử lại.'));
+      resolve();
     });
-  }, [appointmentId, userId, userName, userRole]);
+  }), [appointmentId]);
 
   const endCall = useCallback(
     (extraData?: { diagnosis?: string; prescriptionNotes?: string }) =>

@@ -145,20 +145,20 @@ export default function ClinicalQueuePage() {
             </p>
           </header>
           <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
-            <aside className="h-fit border border-emerald-100 bg-white p-5 rounded shadow-xs">
+            <aside className="h-fit border border-emerald-100 bg-white p-5 rounded-xl shadow-xs">
               <p className="text-sm font-bold">Tiếp nhận phiếu</p>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 Hệ thống tự xác định các phòng từ chỉ định và cấp số cho từng phòng.
               </p>
               <button
-                className="mt-4 w-full bg-emerald-700 p-3 font-bold text-white rounded hover:bg-emerald-800 transition cursor-pointer"
+                className="mt-4 w-full bg-emerald-700 p-3 font-bold text-white rounded-xl hover:bg-emerald-800 transition cursor-pointer"
                 onClick={() => setScanning((v) => !v)}
               >
                 {scanning ? 'Đóng camera' : 'Quét QR phiếu chỉ định'}
               </button>
-              {scanning ? <div id={READER_ID} className="mt-3 min-h-72 bg-black rounded overflow-hidden" /> : null}
+              {scanning ? <div id={READER_ID} className="mt-3 min-h-72 bg-black rounded-xl overflow-hidden" /> : null}
               <textarea
-                className="mt-3 w-full border border-slate-300 p-3 text-xs rounded"
+                className="mt-3 w-full border border-slate-300 p-3 text-xs rounded-xl"
                 rows={3}
                 value={payload}
                 onChange={(e) => setPayload(e.target.value)}
@@ -166,28 +166,28 @@ export default function ClinicalQueuePage() {
               />
               <button
                 disabled={!payload.trim() || busy === 'receive'}
-                className="mt-2 w-full bg-slate-900 p-3 font-bold text-white rounded hover:bg-black disabled:opacity-40 transition cursor-pointer"
+                className="mt-2 w-full bg-slate-900 p-3 font-bold text-white rounded-xl hover:bg-black disabled:opacity-40 transition cursor-pointer"
                 onClick={() => void receive()}
               >
                 {busy === 'receive' ? 'Đang tiếp nhận…' : 'Tiếp nhận & cấp số'}
               </button>
               {message ? (
-                <p className="mt-3 bg-emerald-50 border border-emerald-200 rounded p-3 text-sm text-emerald-700">
+                <p className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700">
                   {message}
                 </p>
               ) : null}
               {error ? (
-                <p className="mt-3 bg-red-50 border border-rose-200 rounded p-3 text-sm text-red-700">
+                <p className="mt-3 bg-red-50 border border-rose-200 rounded-xl p-3 text-sm text-red-700">
                   {error}
                 </p>
               ) : null}
             </aside>
             <div>
-              <div className="mb-4 border border-emerald-100 bg-white p-4 rounded shadow-xs">
+              <div className="mb-4 border border-emerald-100 bg-white p-4 rounded-xl shadow-xs">
                 <label className="block text-sm font-bold">
                   Phòng đang xem
                   <select
-                    className="mt-2 w-full border border-slate-300 bg-white p-3 rounded text-sm"
+                    className="mt-2 w-full border border-slate-300 bg-white p-3 rounded-xl text-sm"
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value)}
                   >
@@ -223,7 +223,7 @@ export default function ClinicalQueuePage() {
               </div>
               <div className="space-y-4">
                 {Object.values(grouped).length === 0 ? (
-                  <div className="border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 rounded">
+                  <div className="border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 rounded-xl">
                     {view === 'completed'
                       ? 'Chưa có bệnh nhân hoàn thành tại phòng này hôm nay.'
                       : 'Chưa có bệnh nhân trong hàng đợi phòng này hôm nay.'}
@@ -232,7 +232,7 @@ export default function ClinicalQueuePage() {
                   Object.values(grouped).map((ticket: any) => (
                     <article
                       key={`${ticket.queueNumber}-${ticket.patient?.id}`}
-                      className="border border-slate-200 bg-white rounded shadow-xs overflow-hidden"
+                      className="border border-slate-200 bg-white rounded-xl shadow-xs overflow-hidden"
                     >
                       <header className="flex items-center justify-between bg-emerald-50 p-4 border-b border-emerald-100">
                         <div>
@@ -257,7 +257,7 @@ export default function ClinicalQueuePage() {
                             {order.status !== 'COMPLETED' ? (
                               <button
                                 disabled={busy === order.id}
-                                className="bg-emerald-700 hover:bg-emerald-800 px-4 py-2 text-sm font-bold text-white rounded transition disabled:opacity-50 cursor-pointer"
+                                className="bg-emerald-700 hover:bg-emerald-800 px-4 py-2 text-sm font-bold text-white rounded-xl transition disabled:opacity-50 cursor-pointer"
                                 onClick={() => void complete(order.id)}
                               >
                                 {busy === order.id ? 'Đang xử lý…' : 'Mô phỏng kết quả'}

@@ -93,13 +93,13 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
       onClick={onClose}
     >
       <div
-        className="bg-white rounded shadow-2xl max-w-2xl w-full p-6 border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
         role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-700">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <CalendarOff className="h-5 w-5" />
             </div>
             <div>
@@ -113,7 +113,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
           </div>
           <button
             type="button"
-            className="w-8 h-8 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
             onClick={onClose}
           >
             ✕
@@ -121,19 +121,19 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
         </div>
 
         {err && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded font-medium">
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
             {err}
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded font-bold">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold">
             {successMsg}
           </div>
         )}
 
         {/* Form nhập thông tin nghỉ */}
-        <div className="grid gap-3 sm:grid-cols-3 bg-slate-50/80 p-3.5 rounded border border-slate-200/80 text-xs">
+        <div className="grid gap-3 sm:grid-cols-3 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80 text-xs">
           <div className="sm:col-span-3">
             <label className="block font-bold text-slate-700 mb-1">Chọn bác sĩ báo nghỉ:</label>
             <select
@@ -142,7 +142,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
                 setSelectedDoctorId(e.target.value)
                 setAnalysis(null)
               }}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded font-medium text-slate-800 focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:border-emerald-600 focus:outline-none"
             >
               <option value="">-- Chọn bác sĩ --</option>
               {doctors.map((d) => (
@@ -159,7 +159,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800 font-medium focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:border-emerald-600 focus:outline-none"
             />
           </div>
 
@@ -169,7 +169,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800 font-medium focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:border-emerald-600 focus:outline-none"
             />
           </div>
 
@@ -178,7 +178,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
               type="button"
               onClick={handleAnalyze}
               disabled={analyzing || !selectedDoctorId}
-              className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded transition shadow-xs cursor-pointer disabled:opacity-50"
+              className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
             >
               {analyzing ? 'Đang phân tích…' : '🔍 AI Phân tích'}
             </button>
@@ -188,7 +188,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
         {/* KẾT QUẢ PHÂN TÍCH AI */}
         {analysis && (
           <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-3 rounded text-xs text-amber-900">
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900">
               <span className="font-bold">
                 ⚠️ Phát hiện {analysis.affectedCount} lịch hẹn của bệnh nhân bị ảnh hưởng!
               </span>
@@ -206,7 +206,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
                 {analysis.impacts.map((item, idx) => (
                   <div
                     key={item.appointment.id}
-                    className="p-3 bg-white border border-slate-200 rounded space-y-2 text-xs shadow-2xs"
+                    className="p-3 bg-white border border-slate-200 rounded-xl space-y-2 text-xs shadow-2xs"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900">
@@ -234,7 +234,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
                               [item.appointment.id]: e.target.value,
                             }))
                           }
-                          className="w-full px-2.5 py-1.5 bg-emerald-50/50 border border-emerald-300 rounded text-xs font-medium text-emerald-950 focus:outline-none"
+                          className="w-full px-2.5 py-1.5 bg-emerald-50/50 border border-emerald-300 rounded-xl text-xs font-medium text-emerald-950 focus:outline-none"
                         >
                           {item.suggestedSlots.map((slot) => (
                             <option key={slot.slotId} value={slot.slotId}>
@@ -254,7 +254,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
                 >
                   Đóng
                 </button>
@@ -262,7 +262,7 @@ export default function DoctorLeaveModal({ isOpen, onClose, doctors, onSuccess }
                   type="button"
                   onClick={handleExecuteReschedule}
                   disabled={rescheduling}
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {rescheduling ? 'Đang thực hiện đổi lịch…' : '🚀 Xác nhận Đổi lịch bằng AI'}
                 </button>

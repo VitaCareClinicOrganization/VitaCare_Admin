@@ -45,6 +45,8 @@ export default function DoctorTelehealthRoom({
 }: DoctorTelehealthRoomProps) {
   const [activeTab, setActiveTab] = useState<"clinical" | "chat">("clinical");
   const [inputChat, setInputChat] = useState("");
+  const [sendingChat, setSendingChat] = useState(false);
+  const sendingChatRef = useRef(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [appointmentInfo, setAppointmentInfo] = useState<any>(null);
 
@@ -113,11 +115,21 @@ export default function DoctorTelehealthRoom({
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendChatMessage = (e: React.FormEvent) => {
+  const handleSendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputChat.trim()) return;
-    sendMessage(inputChat);
-    setInputChat("");
+    if (!inputChat.trim() || sendingChatRef.current) return;
+    sendingChatRef.current = true;
+    setSendingChat(true);
+    const submitted = inputChat;
+    try {
+      await sendMessage(submitted);
+      setInputChat(current => current === submitted ? '' : current);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Không gửi được tin nhắn. Vui lòng thử lại.');
+    } finally {
+      sendingChatRef.current = false;
+      setSendingChat(false);
+    }
   };
 
   const handleFinishConsultation = async () => {
@@ -169,7 +181,7 @@ export default function DoctorTelehealthRoom({
               <Stethoscope className="w-3.5 h-3.5 text-emerald-700" />
               Phòng khám từ xa
             </span>
-            <span className="bg-slate-100 text-slate-600 border border-slate-200 rounded px-2 py-0.5 text-[11px] font-mono font-semibold">
+            <span className="bg-slate-100 text-slate-600 border border-slate-200 rounded-xl px-2 py-0.5 text-[11px] font-mono font-semibold">
               Mã: {appointmentInfo?.bookingCode || appointmentId.slice(0, 8)}
             </span>
           </div>
@@ -178,7 +190,7 @@ export default function DoctorTelehealthRoom({
         {/* Trạng thái kết nối & Nút hoàn tất */}
         <div className="flex items-center gap-3">
           <div
-            className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs border font-medium transition-colors ${isPeerInRoom
+            className={`flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs border font-medium transition-colors ${isPeerInRoom
               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
               : "bg-amber-50 text-amber-700 border-amber-200"
               }`}
@@ -197,7 +209,7 @@ export default function DoctorTelehealthRoom({
           <button
             onClick={handleFinishConsultation}
             disabled={isFinishing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded cursor-pointer transition-colors shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isFinishing ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -212,7 +224,7 @@ export default function DoctorTelehealthRoom({
       {/* 2. Không gian làm việc chính (Grid 2 cột) */}
       <div className="flex-1 flex flex-col lg:flex-row p-3 gap-3 overflow-hidden">
         {/* CỘT TRÁI: Màn hình quan sát bệnh nhân & Thanh công cụ (60%) */}
-        <section className="flex-1 flex flex-col bg-white border border-slate-200/90 rounded shadow-xs p-3 overflow-hidden">
+        <section className="flex-1 flex flex-col bg-white border border-slate-200/90 rounded-xl shadow-xs p-3 overflow-hidden">
           {/* Header phụ của Monitor */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs">
             <div className="flex items-center gap-2">
@@ -224,14 +236,14 @@ export default function DoctorTelehealthRoom({
               </span>
             </div>
             {peerAudioMuted && (
-              <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] px-2 py-0.5 rounded flex items-center gap-1 font-medium">
+              <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] px-2 py-0.5 rounded-xl flex items-center gap-1 font-medium">
                 <MicOff className="w-3 h-3" /> Bệnh nhân đã tắt mic
               </span>
             )}
           </div>
 
           {/* Khung hình Video Bệnh nhân (Monitor) */}
-          <div className="flex-1 bg-slate-900 rounded border border-slate-800 relative overflow-hidden flex items-center justify-center min-h-[280px]">
+          <div className="flex-1 bg-slate-900 rounded-xl border border-slate-800 relative overflow-hidden flex items-center justify-center min-h-[280px]">
             {remoteStream && !peerVideoOff ? (
               <video
                 ref={remoteVideoRef}
@@ -258,7 +270,7 @@ export default function DoctorTelehealthRoom({
             )}
 
             {/* Badge thông tin bệnh nhân góc trên */}
-            <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-xs px-2.5 py-1 rounded text-xs text-white border border-slate-700/80 flex items-center gap-1.5 shadow-sm">
+            <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-xs px-2.5 py-1 rounded-xl text-xs text-white border border-slate-700/80 flex items-center gap-1.5 shadow-sm">
               <User className="w-3.5 h-3.5 text-slate-300" />
               <span className="font-semibold">
                 {appointmentInfo?.patient?.name || "Bệnh nhân"}
@@ -266,7 +278,7 @@ export default function DoctorTelehealthRoom({
             </div>
 
             {/* Khung Video Bác sĩ (Picture-in-Picture) */}
-            <div className="absolute bottom-3 right-3 w-40 sm:w-48 aspect-4/3 bg-slate-950 rounded border-2 border-white/80 overflow-hidden shadow-xl">
+            <div className="absolute bottom-3 right-3 w-40 sm:w-48 aspect-4/3 bg-slate-950 rounded-xl border-2 border-white/80 overflow-hidden shadow-xl">
               {localStream && !isVideoOff ? (
                 <video
                   ref={localVideoRef}
@@ -281,7 +293,7 @@ export default function DoctorTelehealthRoom({
                   <span className="text-[10px]">Camera của bạn đang tắt</span>
                 </div>
               )}
-              <div className="absolute bottom-1 left-1.5 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-medium">
+              <div className="absolute bottom-1 left-1.5 bg-black/70 px-1.5 py-0.5 rounded-xl text-[10px] text-white font-medium">
                 BS. {doctorName} (Bạn)
               </div>
             </div>
@@ -293,7 +305,7 @@ export default function DoctorTelehealthRoom({
               {/* Nút Micro */}
               <button
                 onClick={toggleAudio}
-                className={`px-3 py-2 rounded text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${isAudioMuted
+                className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${isAudioMuted
                   ? "bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100"
                   : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"
                   }`}
@@ -305,7 +317,7 @@ export default function DoctorTelehealthRoom({
               {/* Nút Camera */}
               <button
                 onClick={toggleVideo}
-                className={`px-3 py-2 rounded text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${isVideoOff
+                className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${isVideoOff
                   ? "bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100"
                   : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"
                   }`}
@@ -318,7 +330,7 @@ export default function DoctorTelehealthRoom({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTab(activeTab === "chat" ? "clinical" : "chat")}
-                className={`px-3 py-2 rounded text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${activeTab === "chat"
+                className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border cursor-pointer transition-colors shadow-2xs ${activeTab === "chat"
                   ? "bg-emerald-700 text-white border-emerald-700"
                   : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"
                   }`}
@@ -336,7 +348,7 @@ export default function DoctorTelehealthRoom({
         </section>
 
         {/* CỘT PHẢI: Thông tin bệnh nhân & Tin nhắn trực tuyến (40%) */}
-        <aside className="w-full lg:w-[440px] xl:w-[480px] bg-white border border-slate-200/90 rounded shadow-xs flex flex-col shrink-0 overflow-hidden">
+        <aside className="w-full lg:w-[440px] xl:w-[480px] bg-white border border-slate-200/90 rounded-xl shadow-xs flex flex-col shrink-0 overflow-hidden">
           {/* Tab Navigation chuẩn VitaCare */}
           <div className="flex border-b border-slate-200 bg-slate-50/70 shrink-0">
             <button
@@ -365,13 +377,13 @@ export default function DoctorTelehealthRoom({
           {activeTab === "clinical" ? (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-slate-800 text-xs">
               {/* Thẻ thông tin hành chính bệnh nhân */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <span className="font-bold text-slate-700 uppercase text-[10px] tracking-wider flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700" />
                     Thông tin bệnh nhân
                   </span>
-                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded flex items-center gap-1">
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-xl flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> Đã xác thực
                   </span>
                 </div>
@@ -399,7 +411,7 @@ export default function DoctorTelehealthRoom({
               </div>
 
               {/* Thẻ thông tin dịch vụ & lịch hẹn */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
                 <span className="font-bold text-slate-700 uppercase text-[10px] tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-200">
                   <Calendar className="w-3.5 h-3.5 text-emerald-700" />
                   Chi tiết cuộc hẹn
@@ -424,12 +436,12 @@ export default function DoctorTelehealthRoom({
 
               {/* Thẻ triệu chứng ban đầu đã đăng ký */}
               {appointmentInfo?.symptomsDescription && (
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                   <span className="font-bold text-slate-700 uppercase text-[10px] tracking-wider flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-emerald-700" />
                     Lý do khám & Triệu chứng ban đầu
                   </span>
-                  <div className="bg-white p-3 rounded border border-slate-200 text-slate-800 text-xs leading-relaxed">
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 text-slate-800 text-xs leading-relaxed">
                     {appointmentInfo.symptomsDescription}
                   </div>
                 </div>
@@ -456,9 +468,9 @@ export default function DoctorTelehealthRoom({
                           {isMe ? "Bác sĩ (Bạn)" : msg.senderName}
                         </span>
                         <div
-                          className={`max-w-[85%] px-3 py-2 rounded text-xs shadow-2xs leading-relaxed ${isMe
-                            ? "bg-emerald-700 text-white rounded-br-none"
-                            : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"
+                          className={`max-w-[85%] px-3 py-2 rounded-xl text-xs shadow-2xs leading-relaxed ${isMe
+                            ? "bg-emerald-700 text-white"
+                            : "bg-white text-slate-800 border border-slate-200"
                             }`}
                         >
                           {msg.text}
@@ -477,12 +489,12 @@ export default function DoctorTelehealthRoom({
                   value={inputChat}
                   onChange={(e) => setInputChat(e.target.value)}
                   placeholder="Nhập tin nhắn hướng dẫn bệnh nhân..."
-                  className="flex-1 bg-white border border-slate-300 rounded px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-700"
+                  className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-700"
                 />
                 <button
                   type="submit"
-                  disabled={!inputChat.trim()}
-                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded cursor-pointer disabled:opacity-50 transition-colors shadow-2xs"
+                  disabled={sendingChat || !inputChat.trim()}
+                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl cursor-pointer disabled:opacity-50 transition-colors shadow-2xs"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>

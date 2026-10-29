@@ -313,6 +313,11 @@ export default function ReceptionDetailModal({
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Thông tin khám bệnh</h3>
             </div>
             <dl>
+              <InfoRow
+                label="Hình thức khám"
+                value={activeDetail.bookingMethod?.name || (isTelehealth ? 'Tư vấn trực tuyến' : activeDetail.bookingMethod?.code === 'HEALTH_PACKAGE' ? 'Gói khám sức khỏe' : ['CONSULTATION', 'DOCTOR'].includes(activeDetail.bookingMethod?.code) ? 'Khám với bác sĩ' : activeDetail.servicePackage ? 'Khám chuyên khoa' : doctor ? 'Khám với bác sĩ' : '—')}
+                isHighlight
+              />
               <InfoRow label="Ngày khám" value={formatDateVi(activeDetail.appointmentDate)} />
               <InfoRow label="Khung giờ" value={formatExamTimeLine(activeDetail.startTime, activeDetail.endTime)} isHighlight />
               <InfoRow label="Bác sĩ phụ trách" value={doctorDisplayName(doctor)} />
@@ -351,7 +356,7 @@ export default function ReceptionDetailModal({
                   <div className="font-bold flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-emerald-800">
                       <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                      <span>{isOnlinePaid ? 'Đã thanh toán trước (Online)' : 'Đã thu phí tại quầy'}</span>
+                      <span>{isOnlinePaid ? 'Đã thanh toán (Online)' : 'Đã thu phí tại quầy'}</span>
                     </div>
                     {isOnlinePaid && (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">

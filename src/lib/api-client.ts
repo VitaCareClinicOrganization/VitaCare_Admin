@@ -49,7 +49,8 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const request = error.config as RetryableRequest | undefined
     const isRefresh = request?.url?.includes('/auth/refresh')
-    if (error.response?.status === 401 && request && !request._retry && !isRefresh) {
+    const isLogout = request?.url?.includes('/auth/logout')
+    if (error.response?.status === 401 && request && !request._retry && !isRefresh && !isLogout) {
       request._retry = true
       try {
         refreshPromise ??= apiClient.post('/auth/refresh', {}).then(() => undefined).finally(() => { refreshPromise = null })

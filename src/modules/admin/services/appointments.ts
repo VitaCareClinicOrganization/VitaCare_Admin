@@ -48,8 +48,8 @@ export async function getAvailability({ doctorId, date, specialtyId, servicePack
   return appointmentRequest({ method: 'GET', url: '/schedules/availability', params: { doctorId: doctorId || undefined, date, specialtyId: specialtyId || undefined, servicePackageId: servicePackageId || undefined, branchId: branchId || undefined } }, 'Không lấy được khung giờ.')
 }
 
-export async function listReceptionAppointments({ from, to, status, q }) {
-  const params = { from, to, q, ...(status && status !== 'all' ? { status } : {}) }
+export async function listReceptionAppointments({ from, to, status, q, paymentChannel }: { from?: string; to?: string; status?: string; q?: string; paymentChannel?: 'counter'; token?: string } = {}) {
+  const params = { from, to, q, paymentChannel, ...(status && status !== 'all' ? { status } : {}) }
   const data = await appointmentRequest({ method: 'GET', url: '/appointments/reception', params }, 'Không lấy được danh sách lịch.')
   return data?.appointments || []
 }

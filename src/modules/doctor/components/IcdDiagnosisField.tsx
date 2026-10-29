@@ -162,7 +162,7 @@ export default function IcdDiagnosisField({
       </label>
       <div className="relative" ref={wrapRef}>
         <input
-          className={`w-full ${value?.code ? 'pr-20' : 'pr-3.5'} pl-3.5 py-2 text-xs bg-white border rounded text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
+          className={`w-full ${value?.code ? 'pr-20' : 'pr-3.5'} pl-3.5 py-2 text-xs bg-white border rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-2xs ${
             error
               ? 'border-rose-400 focus:ring-rose-500/20 focus:border-rose-600'
               : 'border-slate-300 focus:ring-emerald-500/20 focus:border-emerald-600'
@@ -182,12 +182,12 @@ export default function IcdDiagnosisField({
           aria-activedescendant={activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined}
         />
         {value?.code ? (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[11px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded pointer-events-none" title="Đã chọn mã ICD-10">
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[11px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl pointer-events-none" title="Đã chọn mã ICD-10">
             {value.code}
           </span>
         ) : null}
         {showList ? (
-          <ul id={listId} className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded shadow-lg divide-y divide-slate-100 p-1" role="listbox">
+          <ul id={listId} className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg divide-y divide-slate-100 p-1" role="listbox">
             {loading ? <li className="px-3 py-2.5 text-xs text-slate-500 text-center">Đang tìm…</li> : null}
             {!loading && searchErr ? <li className="px-3 py-2.5 text-xs text-rose-600 text-center">{searchErr}</li> : null}
             {!loading && !searchErr && String(query || '').trim().length < 2 ? (
@@ -205,7 +205,7 @@ export default function IcdDiagnosisField({
                       id={`${listId}-option-${index}`}
                       ref={(node) => { optionRefs.current[index] = node }}
                       type="button"
-                      className={`w-full text-left px-3 py-2 rounded text-xs flex items-center justify-between gap-3 transition-colors cursor-pointer ${
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-3 transition-colors cursor-pointer ${
                         activeIndex === index
                           ? 'bg-emerald-50 text-emerald-900 font-semibold'
                           : 'hover:bg-slate-50 text-slate-700'
@@ -216,7 +216,7 @@ export default function IcdDiagnosisField({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => pickItem(it)}
                     >
-                      <span className="font-mono font-bold text-emerald-700 bg-emerald-100/60 px-1.5 py-0.5 rounded shrink-0">{it.code}</span>
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-100/60 px-1.5 py-0.5 rounded-xl shrink-0">{it.code}</span>
                       <span className="truncate flex-1">{it.name || it.description}</span>
                     </button>
                   </li>
