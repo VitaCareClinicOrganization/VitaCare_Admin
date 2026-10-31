@@ -58,6 +58,7 @@ export function useWebRTC({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const targetSocketIdRef = useRef<string | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const leavingRef = useRef(false);
   const onCallEndedRef = useRef(onCallEnded);
 
   useEffect(() => {
@@ -183,6 +184,7 @@ export function useWebRTC({
   // chạy đầu tiên khi component mount, xin quyền bật cam
   useEffect(() => {
     let mounted = true;
+    let acquiredStream: MediaStream | null = null;
 
     async function initLocalStream() {
       try {
@@ -198,8 +200,11 @@ export function useWebRTC({
           },
         });
 
-        if (mounted) {
+        acquiredStream = stream;
+        if (mounted && !leavingRef.current) {
           setLocalStream(stream);
+        } else {
+          stream.getTracks().forEach((track) => track.stop());
         }
       } catch (err) {
         console.error("Error accessing camera/microphone:", err);
@@ -210,16 +215,14 @@ export function useWebRTC({
 
     return () => {
       mounted = false;
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-      }
+      acquiredStream?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
 
   // chạy khi mount, để đăng kí sự kiện
   useEffect(() => {
-    if (!localStream) return;
+    if (!localStream || leavingRef.current) return;
     setMessages([]);
 
     setConnectionStatus("connecting");
@@ -373,6 +376,24 @@ export function useWebRTC({
     });
   }), [appointmentId]);
 
+  // Chỉ rời kết nối; không phát telehealth:end-call hoặc hoàn tất lịch hẹn.
+  const leaveRoom = useCallback(() => {
+    leavingRef.current = true;
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+    targetSocketIdRef.current = null;
+    pendingCandidatesRef.current = [];
+    localStream?.getTracks().forEach((track) => track.stop());
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsPeerInRoom(false);
+    setPeerInfo(null);
+    setIsConnected(false);
+    setConnectionStatus("idle");
+  }, [localStream]);
+
   const endCall = useCallback(
     (extraData?: { diagnosis?: string; prescriptionNotes?: string }) =>
       new Promise<boolean>((resolve) => {
@@ -410,6 +431,7 @@ export function useWebRTC({
     toggleAudio,
     toggleVideo,
     sendMessage,
+    leaveRoom,
     endCall,
   };
 }

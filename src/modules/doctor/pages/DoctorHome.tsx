@@ -487,7 +487,8 @@ export default function DoctorHome() {
                   }}
                   placeholder="Tìm theo tên bệnh nhân, mã vé, mã BN, số điện thoại..."
                   aria-label="Tìm kiếm lịch khám"
-                  className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition-all placeholder:text-slate-400"
+                  id="doctor-appointment-search"
+                  className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded placeholder:text-slate-400"
                 />
               </div>
 
@@ -608,7 +609,7 @@ export default function DoctorHome() {
                             <td className="py-2.5 px-3 align-middle">
                               <span className="font-bold text-slate-900 block truncate" title={item.ticket || item.bookingCode}>{item.ticket || item.bookingCode || '—'}</span>
                               <span className="text-[10px] text-slate-500 font-medium block truncate" title={appointmentMethodLabel(item)}>{appointmentMethodLabel(item)}</span>
-                              {!isTelehealthDoctorAppt(item) && item.visitQueueNumber ? (
+                              {item.visitQueueNumber != null && item.visitQueueNumber !== '' ? (
                                 <span className="text-[10px] text-emerald-700 font-semibold block">
                                   STT khám: {item.visitQueueNumber}
                                 </span>
@@ -790,6 +791,10 @@ export default function DoctorHome() {
                 <div>
                   <span className="text-slate-500 block">Khung giờ:</span>
                   <b className="text-slate-900">{detailAppt.startTime || '—'} - {detailAppt.endTime || '—'}</b>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Số thứ tự khám:</span>
+                  <b className="text-emerald-800">{detailAppt.visitQueueNumber ?? 'Chưa được cấp'}</b>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Phòng khám:</span>

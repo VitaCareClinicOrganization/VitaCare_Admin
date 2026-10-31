@@ -309,7 +309,7 @@ export default function ReceptionAppointmentTable({
                     ) : (
                       <span className="text-slate-400 italic">Chưa chọn</span>
                     )}
-                    {!row.isTelehealth && row.bookingMethod?.code !== 'ONLINE_CONSULTATION' && row.visitQueueNumber != null && row.visitQueueNumber !== '' && (
+                    {row.visitQueueNumber != null && row.visitQueueNumber !== '' && (
                       <div className="text-[11px] font-bold text-blue-700">STT: {row.visitQueueNumber}</div>
                     )}
                   </td>

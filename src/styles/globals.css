@@ -77,6 +77,17 @@ a:hover {
   text-decoration: underline;
 }
 
+#doctor-appointment-search,
+#doctor-appointment-search:focus,
+#doctor-appointment-search:focus-visible,
+#doctor-appointment-search:active {
+  appearance: none;
+  border-color: #e2e8f0;
+  outline: none;
+  box-shadow: none;
+  transition: none;
+}
+
 /* Ẩn thanh cuộn nhưng vẫn hỗ trợ cuộn chuột / cảm ứng */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

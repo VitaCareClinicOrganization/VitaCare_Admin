@@ -22,6 +22,7 @@ import {
   Calendar,
   Loader2,
   Info,
+  LogOut,
 } from "lucide-react";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { apiClient, getSocketBaseUrl } from "@/lib/api-client";
@@ -48,6 +49,8 @@ export default function DoctorTelehealthRoom({
   const [sendingChat, setSendingChat] = useState(false);
   const sendingChatRef = useRef(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const roomActionRef = useRef<'leave' | 'finish' | null>(null);
   const [appointmentInfo, setAppointmentInfo] = useState<any>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -69,6 +72,7 @@ export default function DoctorTelehealthRoom({
     toggleVideo,
     sendMessage,
     endCall,
+    leaveRoom,
   } = useWebRTC({
     serverUrl,
     appointmentId,
@@ -133,7 +137,9 @@ export default function DoctorTelehealthRoom({
   };
 
   const handleFinishConsultation = async () => {
+    if (roomActionRef.current) return;
     if (!confirm("Bác sĩ có chắc chắn muốn kết thúc ca tư vấn trực tuyến này?")) return;
+    roomActionRef.current = 'finish';
     setIsFinishing(true);
     try {
       const callEnded = await endCall();
@@ -144,14 +150,23 @@ export default function DoctorTelehealthRoom({
     } catch (err) {
       console.error("Lỗi kết thúc ca khám:", err);
     } finally {
+      roomActionRef.current = null;
       setIsFinishing(false);
     }
+  };
+
+  const handleLeaveRoom = () => {
+    if (roomActionRef.current) return;
+    roomActionRef.current = 'leave';
+    setIsLeaving(true);
+    leaveRoom();
+    onClose?.();
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col font-sans select-none overflow-hidden">
       {/* 1. Header chuẩn VitaCare Clinic */}
-      <header className="h-14 bg-white border-b border-slate-200/90 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-xs">
+      <header className="min-h-14 bg-white border-b border-slate-200/90 px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 relative flex items-center justify-center">
@@ -178,7 +193,6 @@ export default function DoctorTelehealthRoom({
 
           <div className="hidden md:flex items-center gap-2">
             <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Stethoscope className="w-3.5 h-3.5 text-emerald-700" />
               Phòng khám từ xa
             </span>
             <span className="bg-slate-100 text-slate-600 border border-slate-200 rounded-xl px-2 py-0.5 text-[11px] font-mono font-semibold">
@@ -188,9 +202,9 @@ export default function DoctorTelehealthRoom({
         </div>
 
         {/* Trạng thái kết nối & Nút hoàn tất */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <div
-            className={`flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs border font-medium transition-colors ${isPeerInRoom
+            className={`hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs border font-medium transition-colors ${isPeerInRoom
               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
               : "bg-amber-50 text-amber-700 border-amber-200"
               }`}
@@ -207,9 +221,20 @@ export default function DoctorTelehealthRoom({
           </div>
 
           <button
+            type="button"
+            onClick={handleLeaveRoom}
+            disabled={isLeaving || isFinishing}
+            title="Rời phòng, giữ nguyên ca khám để có thể vào lại"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded cursor-pointer transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLeaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+            <span>{isLeaving ? 'Đang rời phòng…' : 'Rời phòng'}</span>
+          </button>
+          <button
+            type="button"
             onClick={handleFinishConsultation}
-            disabled={isFinishing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isFinishing || isLeaving}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded cursor-pointer transition-colors shadow-xs whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isFinishing ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

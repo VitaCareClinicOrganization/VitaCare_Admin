@@ -80,9 +80,21 @@ const TABLE_COLUMNS = [
   { label: 'Thao tác', align: 'right' as const, width: 'whitespace-nowrap' },
 ]
 
+function formatAccountDate(value?: string | null, includeTime = false) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit' } as const : {}),
+  }).format(date)
+}
+
 export default function ClinicStaffPage() {
   const navigate = useNavigate()
   const { role: currentRole } = useAuth()
+  const isAccountManagement = currentRole === 'admin'
+  const tableColumns = TABLE_COLUMNS.map(column => column === 'Chuyên khoa' && isAccountManagement ? 'Đăng nhập gần nhất' : column)
   const { hasPermission } = usePermission()
   const canCreateUsers = hasPermission(AppPermission.USER_CREATE)
   const canUpdateUsers = hasPermission(AppPermission.USER_UPDATE)
@@ -321,8 +333,8 @@ export default function ClinicStaffPage() {
     <>
       <AdminPageHeader
         eyebrow="Quản lý người dùng"
-        title="Nhân sự phòng khám"
-        description="Quản lý tài khoản, ảnh đại diện, chi nhánh và chuyên khoa của nhân sự."
+        title={isAccountManagement ? 'Tài khoản nhân viên' : 'Nhân sự phòng khám'}
+        description={isAccountManagement ? 'Quản lý tài khoản đăng nhập, vai trò, chi nhánh và trạng thái truy cập của nhân viên.' : 'Quản lý tài khoản, ảnh đại diện, chi nhánh và chuyên khoa của nhân sự.'}
       >
         {currentRole !== 'admin' && <AdminButton
           variant="secondary"
@@ -345,7 +357,7 @@ export default function ClinicStaffPage() {
           icon={Plus}
           onClick={openCreate}
         >
-          Thêm nhân sự
+          {isAccountManagement ? 'Thêm tài khoản' : 'Thêm nhân sự'}
         </AdminButton>}
       </AdminPageHeader>
 
@@ -380,7 +392,7 @@ export default function ClinicStaffPage() {
         </div>
 
         <AdminTable minWidth="min-w-[750px]">
-          <AdminTableHead columns={TABLE_COLUMNS} />
+          <AdminTableHead columns={tableColumns} />
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <AdminTableLoading colSpan={6} message="Đang tải dữ liệu nhân sự…" />
@@ -439,15 +451,20 @@ export default function ClinicStaffPage() {
                         )
                       })()}
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-emerald-800 font-medium whitespace-nowrap">{specName}</td>
+                    <td className="px-5 py-3.5 text-xs whitespace-nowrap">
+                      {isAccountManagement ? <>
+                        <p className={row.lastLoginAt ? 'font-medium text-slate-800' : 'text-slate-400'}>{row.lastLoginAt ? formatAccountDate(row.lastLoginAt, true) : 'Chưa ghi nhận'}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">Ngày tạo: {formatAccountDate(row.createdAt)}</p>
+                      </> : <span className="text-emerald-800 font-medium">{specName}</span>}
+                    </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200 whitespace-nowrap">
                         {ROLE_LABEL[roleKey] || row.role}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <StatusBadge status={row.isBlocked ? 'blocked' : 'active'}>
-                        {row.isBlocked ? 'Đã khóa' : 'Hoạt động'}
+                      <StatusBadge status={row.isBlocked ? 'blocked' : String(row.status).toLowerCase() === 'inactive' ? 'inactive' : 'active'}>
+                        {row.isBlocked ? 'Đã khóa' : String(row.status).toLowerCase() === 'inactive' ? 'Ngừng hoạt động' : 'Hoạt động'}
                       </StatusBadge>
                     </td>
                     <td className="px-5 py-3.5 text-right whitespace-nowrap">
