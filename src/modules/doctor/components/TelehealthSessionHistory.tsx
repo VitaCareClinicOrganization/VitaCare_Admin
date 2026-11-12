@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Clock, FileText, Loader2, MessageSquare, RefreshCw } from 'lucide-react'
+import { Clock, Loader2, MessageSquare, RefreshCw } from 'lucide-react'
 import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
 interface SessionMessage {
@@ -17,8 +17,6 @@ interface SessionHistory {
   startedAt: string | null
   endedAt: string | null
   durationSeconds: number | null
-  diagnosis: string | null
-  prescriptionNotes: string | null
   chatMessages: SessionMessage[] | null
 }
 
@@ -91,13 +89,6 @@ export default function TelehealthSessionHistory({ appointmentId }: { appointmen
             <div><dt className="text-slate-500">Thời lượng buổi tư vấn</dt><dd className="mt-1 font-bold text-emerald-800">{formatDuration(session.durationSeconds)}</dd></div>
             <div><dt className="text-slate-500">Tin nhắn đã trao đổi</dt><dd className="mt-1 font-semibold text-slate-800">{messages.length} tin nhắn</dd></div>
           </dl>
-          <div className="space-y-2 text-xs">
-            <h5 className="flex items-center gap-1.5 font-bold text-slate-700"><FileText className="h-3.5 w-3.5 text-emerald-700" /> Kết quả tư vấn</h5>
-            <div className="space-y-3">
-              <div><p className="text-slate-500">Chẩn đoán / Kết luận</p><p className="mt-1 whitespace-pre-wrap break-words text-slate-800">{session.diagnosis || 'Chưa ghi nhận chẩn đoán.'}</p></div>
-              <div><p className="text-slate-500">Đơn thuốc / Hướng dẫn điều trị</p><p className="mt-1 whitespace-pre-wrap break-words text-slate-800">{session.prescriptionNotes || 'Chưa ghi nhận hướng dẫn điều trị.'}</p></div>
-            </div>
-          </div>
           <div className="space-y-2">
             <h5 className="flex items-center gap-1.5 text-xs font-bold text-slate-700"><MessageSquare className="h-3.5 w-3.5 text-emerald-700" /> Lịch sử trò chuyện ({messages.length})</h5>
             <div className="max-h-80 space-y-3 overflow-y-auto p-1" tabIndex={0} aria-label="Nội dung trò chuyện đã lưu">

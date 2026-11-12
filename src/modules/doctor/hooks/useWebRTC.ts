@@ -395,7 +395,7 @@ export function useWebRTC({
   }, [localStream]);
 
   const endCall = useCallback(
-    (extraData?: { diagnosis?: string; prescriptionNotes?: string }) =>
+    () =>
       new Promise<boolean>((resolve) => {
         if (!socketRef.current) {
           resolve(false);
@@ -408,7 +408,6 @@ export function useWebRTC({
             appointmentId,
             endedByRole: userRole,
             endedByUserId: userId,
-            ...extraData,
           },
           (response: { success?: boolean }) => resolve(response?.success === true),
         );

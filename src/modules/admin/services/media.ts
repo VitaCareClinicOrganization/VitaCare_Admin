@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client'
+import { apiClient, unwrapApiData } from '@/lib/api-client'
 
 export async function uploadMediaFile(file: File): Promise<{ url: string; fullUrl?: string }> {
   const formData = new FormData()
@@ -6,5 +6,5 @@ export async function uploadMediaFile(file: File): Promise<{ url: string; fullUr
   const res = await apiClient.post('/media/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
-  return res.data
+  return unwrapApiData<{ url: string; fullUrl?: string }>(res.data)
 }

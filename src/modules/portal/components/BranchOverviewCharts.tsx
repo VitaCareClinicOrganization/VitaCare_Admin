@@ -11,7 +11,6 @@ export default function BranchOverviewCharts({ stats, loading, onViewAll }: {
     { label: 'Chờ thanh toán', value: today.hold ?? today.pending ?? 0, color: '#f59e0b' },
     { label: 'Đã xác nhận', value: Math.max(0, (today.confirmed ?? 0) - (today.checkedIn ?? 0)), color: '#6366f1' },
     { label: 'Đã tiếp nhận', value: today.checkedIn ?? 0, color: '#0284c7' },
-    { label: 'Đang khám / tư vấn', value: today.inExamination ?? 0, color: '#a855f7' },
     { label: 'Hoàn thành', value: today.examined ?? 0, color: '#059669' },
     { label: 'Đã hủy', value: today.cancelled ?? 0, color: '#f43f5e' },
     { label: 'Không đến', value: today.noShow ?? 0, color: '#94a3b8' },

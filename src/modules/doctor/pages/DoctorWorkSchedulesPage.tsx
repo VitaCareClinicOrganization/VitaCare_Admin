@@ -61,14 +61,13 @@ export default function DoctorWorkSchedulesPage({
   const assignedBranch = useMemo(() => {
     const user = session?.user
     return (
-      user?.branchAssignments?.find((b: any) => b.isPrimary)?.branch ||
-      user?.branchAssignments?.[0]?.branch ||
+      user?.branch ||
       null
     )
   }, [session?.user])
 
   const assignedBranchId = useMemo(() => {
-    return assignedBranch?.id || session?.user?.branchAssignments?.[0]?.branchId || ''
+    return assignedBranch?.id || session?.user?.branchId || session?.user?.branch?.id || ''
   }, [assignedBranch, session?.user])
 
   const defaultBranchId = isBranchManager

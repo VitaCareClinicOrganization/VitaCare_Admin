@@ -22,7 +22,7 @@ export function appointmentState(item: any): string {
   const status = String(item.workflowStatus || item.status || '').toUpperCase()
   if (status === 'CANCELLED') return 'CANCELLED'
   if (['COMPLETED', 'EXAMINED'].includes(status)) return 'COMPLETED'
-  if (['CHECKED_IN', 'IN_EXAMINATION'].includes(status) ||
+  if (['CHECKED_IN'].includes(status) ||
       (appointmentMethodCode(item) === 'ONLINE_CONSULTATION' && status === 'CONFIRMED')) return 'CHECKED_IN'
   if (['HOLD', 'PENDING', 'CONFIRMED'].includes(status)) return 'PENDING'
   return status

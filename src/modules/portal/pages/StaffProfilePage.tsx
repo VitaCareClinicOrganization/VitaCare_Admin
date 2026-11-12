@@ -20,7 +20,7 @@ export default function StaffProfilePage() {
   const { user, role } = useAuth()
   const name = user?.fullName || user?.displayName || 'Nhân viên'
   const initials = name.split(/\s+/).slice(-2).map((part: string) => part[0]).join('').toUpperCase()
-  const assignments = user?.branchAssignments || []
+  const assignments = user?.branch ? [user.branch] : []
   const doctor = user?.doctor
   const status = String(user?.status || '').toLowerCase()
   const statusLabel = user?.isBlocked ? 'Đã khóa' : status === 'active' ? 'Đang hoạt động' : status === 'inactive' ? 'Ngừng hoạt động' : 'Chưa cập nhật'
@@ -54,14 +54,13 @@ export default function StaffProfilePage() {
           <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-slate-900"><Building2 className="h-5 w-5 text-[var(--clinic-primary)]" />Chi nhánh được phân công</h2>
           {assignments.length ? (
             <ul className="space-y-3">
-              {assignments.map((assignment: any) => (
-                <li key={assignment.branchId || assignment.branch?.id} className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+              {assignments.map((branch: any) => (
+                <li key={branch.id} className="rounded-lg border border-slate-100 bg-slate-50 p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-slate-800">{assignment.branch?.name || 'Chưa cập nhật tên chi nhánh'}</h3>
-                    {assignment.isPrimary && <span className="rounded-full bg-[var(--clinic-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--clinic-primary)]">Cơ sở chính</span>}
+                    <h3 className="text-sm font-semibold text-slate-800">{branch.name || 'Chưa cập nhật tên chi nhánh'}</h3>
                   </div>
-                  {assignment.branch?.code && <p className="mt-1 text-xs text-slate-500">Mã chi nhánh: {assignment.branch.code}</p>}
-                  {assignment.branch?.address && <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500"><MapPin className="h-4 w-4 shrink-0" />{assignment.branch.address}</p>}
+                  {branch.code && <p className="mt-1 text-xs text-slate-500">Mã chi nhánh: {branch.code}</p>}
+                  {branch.address && <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500"><MapPin className="h-4 w-4 shrink-0" />{branch.address}</p>}
                 </li>
               ))}
             </ul>

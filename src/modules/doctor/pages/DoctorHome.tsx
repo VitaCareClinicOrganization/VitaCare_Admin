@@ -141,7 +141,7 @@ function isTelehealthDoctorAppt(item: any) {
 function canFinishDoctorAppt(item: any) {
   if (isTelehealthDoctorAppt(item)) return false
   const status = String(item.workflowStatus || item.status || '').toUpperCase()
-  return ['CHECKED_IN', 'IN_EXAMINATION'].includes(status)
+  return ['CHECKED_IN'].includes(status)
 }
 
 export default function DoctorHome() {
@@ -644,7 +644,7 @@ export default function DoctorHome() {
                             )}
                             <td className="py-2.5 px-3 text-right whitespace-nowrap">
                               <div className="flex flex-nowrap items-center justify-end gap-1.5">
-                                {isTelehealthDoctorAppt(item) && ['CONFIRMED', 'CHECKED_IN', 'IN_EXAMINATION'].includes(wf || st.toUpperCase()) && (
+                                {isTelehealthDoctorAppt(item) && ['CONFIRMED', 'CHECKED_IN'].includes(wf || st.toUpperCase()) && (
                                   <button
                                     type="button"
                                     className="inline-flex shrink-0 items-center justify-center px-2.5 py-1.5 rounded text-xs font-bold text-white bg-blue-700  cursor-pointer whitespace-nowrap shadow-xs"

@@ -672,8 +672,7 @@ function ManagerDashboard({ stats, loading, user, section = 'dashboard' }: any) 
 
   const assignedBranch =
     stats?.currentBranch ||
-    user?.branchAssignments?.find((b: any) => b.isPrimary)?.branch ||
-    user?.branchAssignments?.[0]?.branch ||
+    user?.branch ||
     null
 
   return (
@@ -836,8 +835,7 @@ function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, 
   const go = (href: string) => { navigate(href); setMenu(false) }
 
   const assignedBranch =
-    user?.branchAssignments?.find((b: any) => b.isPrimary)?.branch ||
-    user?.branchAssignments?.[0]?.branch ||
+    user?.branch ||
     null
   const branchName = assignedBranch?.name || null
   const branchCode = assignedBranch?.code || null
@@ -969,10 +967,7 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
 
   const managerBranchId =
     role === 'branch_manager'
-      ? (user?.branchAssignments?.find((b: any) => b.isPrimary)?.branchId ||
-         user?.branchAssignments?.[0]?.branchId ||
-         user?.branchAssignments?.[0]?.branch?.id ||
-         '')
+      ? (user?.branchId || user?.branch?.id || '')
       : undefined
 
   const content =
@@ -1015,4 +1010,3 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
     </div>
   )
 }
-
