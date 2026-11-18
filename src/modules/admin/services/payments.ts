@@ -44,3 +44,10 @@ export async function recordAppointmentPayment({ token, appointmentId, method, a
   try { return await apiRequest({ method: 'POST', url: `/payments/appointments/${encodeURIComponent(id)}/counter`, data: body }) }
   catch (error) { throw new Error(apiErrorMessage(error, 'Không ghi nhận được thanh toán.')) }
 }
+
+export async function approveAppointmentRefund(appointmentId: string, amount: number, note: string) {
+  try {
+    const response = await apiRequest({ method: 'POST', url: `/payments/appointments/${encodeURIComponent(appointmentId)}/refund/approve`, data: { amount, note } })
+    return unwrapApiData<{ refund: Record<string, any>; message: string }>(response)
+  } catch (error) { throw new Error(apiErrorMessage(error, 'Không duyệt được khoản hoàn tiền.')) }
+}

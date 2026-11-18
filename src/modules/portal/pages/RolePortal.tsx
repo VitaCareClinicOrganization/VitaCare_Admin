@@ -38,6 +38,7 @@ import {
   CalendarClock,
   Users,
   CreditCard,
+  RotateCcw,
   Stethoscope,
   UserCheck,
   Cross,
@@ -78,6 +79,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   schedule: CalendarClock,
   patients: Users,
   billing: CreditCard,
+  refunds: RotateCcw,
   doctors: Stethoscope,
   staff: UserCheck,
   roles: Shield,
@@ -813,6 +815,7 @@ const MANAGER_NAV_SECTIONS = [
       { id: 'dashboard', label: 'Tổng quan', href: '/dashboard', icon: 'dashboard' },
       { id: 'analytics', label: 'Thống kê', href: '/analytics', icon: 'analytics' },
       { id: 'billing', label: 'Thanh toán & Doanh thu', href: '/billing', icon: 'billing' },
+      { id: 'refunds', label: 'Hoàn tiền', href: '/refunds', icon: 'refunds' },
       { id: 'branches', label: 'Thông tin chi nhánh', href: '/branches', icon: 'branches' },
     ],
   },
@@ -879,7 +882,8 @@ function GroupedPortal({ section, user, role, content, menu, setMenu, navigate, 
                       key={item.id}
                       type="button"
                       onClick={() => go(item.href)}
-                      className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left text-xs font-semibold transition cursor-pointer ${active ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${active ? 'bg-slate-100/70 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                     >
                       <span className={`shrink-0 ${active ? 'text-emerald-700' : 'text-slate-400'}`}><Icon name={item.icon} /></span>
@@ -979,7 +983,7 @@ export default function RolePortal({ section = 'dashboard' }: { section?: string
         section === 'roles' ? <RolesPermissionsPage /> :
           section === 'patients' ? (role === 'receptionist' ? <ReceptionPatientsPage /> : <AdminPatientsPage />) :
             section === 'appointments' ? <AdminAppointmentsPage /> :
-              section === 'billing' ? <BillingPage /> :
+              section === 'billing' || section === 'refunds' ? <BillingPage key={section} refundsOnly={section === 'refunds'} /> :
                 section === 'booking-methods' ? <BookingMethodsPage /> :
                   section === 'booking-packages' ? <BookingPackagesPage /> :
                     section === 'specialties' && role === 'branch_manager' ? <BranchSpecialtiesPage /> :

@@ -21,6 +21,7 @@ import {
   Menu,
   ChevronRight,
   CreditCard,
+  RotateCcw,
   Loader2,
   type LucideIcon,
 } from 'lucide-react'
@@ -38,6 +39,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   registration: UserPlus,
   patients: Users,
   billing: CreditCard,
+  refunds: RotateCcw,
 }
 
 export interface StaffMobileHeaderProps {
@@ -114,6 +116,7 @@ export default function RoleSidebar({
         ['patients', 'Bệnh nhân', '/reception/patients'],
         ['registration', 'Đăng ký bệnh nhân', '/registration'],
         ['billing', 'Thu phí', '/billing'],
+        ['refunds', 'Hoàn tiền', '/refunds'],
       ]
 
   const name = String(user?.fullName || user?.displayName || user?.email || (doctor ? 'Bác sĩ' : 'Nhân viên'))
@@ -185,19 +188,20 @@ export default function RoleSidebar({
         <nav className="flex-1 space-y-1 overflow-y-auto p-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {links.map(([id, label, href]) => {
             const IconComp = ICON_MAP[id] || LayoutDashboard
+            const selected = active === id || (active === 'exam' && id === 'calendar')
             return (
               <button
                 key={id}
                 type="button"
-                aria-current={active === id || (active === 'exam' && id === 'calendar') ? 'page' : undefined}
-                className={`flex w-full items-center gap-3 ${doctor ? 'rounded-xl' : 'rounded'} px-3 py-2.5 text-left text-[13px] transition cursor-pointer ${
-                  active === id || (active === 'exam' && id === 'calendar')
-                    ? 'bg-emerald-50 font-bold text-emerald-800'
+                aria-current={selected ? 'page' : undefined}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+                  selected
+                    ? 'bg-slate-100/70 font-medium text-slate-900'
                     : 'font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
                 onClick={() => handleNav(href, id === 'registration' ? { state: { createNew: true } } : undefined)}
               >
-                <IconComp className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} aria-hidden="true" />
+                <IconComp className={`w-[18px] h-[18px] shrink-0 ${selected ? 'text-emerald-700' : 'text-slate-500'}`} strokeWidth={1.8} aria-hidden="true" />
                 <span>{label}</span>
               </button>
             )

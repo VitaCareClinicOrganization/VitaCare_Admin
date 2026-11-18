@@ -31,6 +31,7 @@ import {
 } from '@/modules/admin/services/appointments'
 import DoctorWorkSchedulesPage from './DoctorWorkSchedulesPage'
 import DoctorAppHeader from '../components/DoctorAppHeader'
+import DoctorWaitingQueue from '../components/DoctorWaitingQueue'
 import TelehealthSessionHistory from '../components/TelehealthSessionHistory'
 import { getStaffSession, staffRole } from '@/modules/admin/utils/staffSession'
 import { useAppointmentsSocket } from '@/modules/admin/hooks/useAppointmentsSocket'
@@ -368,14 +369,14 @@ export default function DoctorHome() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded border border-slate-200/90 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
-                <span className={`p-2 rounded-xl border shrink-0 ${isWaitingView
-                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                <span className={`p-2 rounded border shrink-0 ${isWaitingView
+                    ? 'bg-[#28a745]/10 text-[#218838] border-[#28a745]/20'
                     : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
                   {isHistoryView ? (
                     <Users className="w-5 h-5" />
                   ) : isWaitingView ? (
-                    <UserCheck className="w-5 h-5 text-blue-700" />
+                    <UserCheck className="w-5 h-5" />
                   ) : (
                     <CalendarCheck className="w-5 h-5" />
                   )}
@@ -392,7 +393,7 @@ export default function DoctorHome() {
                     {isHistoryView
                       ? 'Danh sách bệnh nhân đã hoàn tất khám tại cơ sở hoặc tư vấn trực tuyến.'
                       : isWaitingView
-                        ? 'Ca khám tại cơ sở đã tiếp nhận và lịch tư vấn online đã xác nhận. Lọc ngày để xem lịch cần xử lý.'
+                        ? 'Theo dõi bệnh nhân đã tiếp nhận theo thứ tự khám. Lịch tư vấn online được hiển thị riêng.'
                         : 'Danh sách toàn bộ lịch hẹn khám bệnh của bác sĩ.'}
                   </p>
                 </div>
@@ -401,7 +402,7 @@ export default function DoctorHome() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
                 onClick={() => void loadAppointments({ silent: true })}
                 disabled={refreshing}
               >
@@ -428,6 +429,15 @@ export default function DoctorHome() {
             isDoctorRole={true}
             readOnly={true}
             initialDoctorId={user?.doctor?.id || user?.doctorId || user?.id}
+          />
+        ) : isWaitingView ? (
+          <DoctorWaitingQueue
+            appointments={appointments}
+            loading={loading}
+            finishingId={finishingId}
+            onFinish={handleFinishExam}
+            onEnterRoom={id => navigate(`/doctor/telehealth/${id}`)}
+            onOpenCalendar={() => navigate('/doctor')}
           />
         ) : (
           /* ============================================================ */

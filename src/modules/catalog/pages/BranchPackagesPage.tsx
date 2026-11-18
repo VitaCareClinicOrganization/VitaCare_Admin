@@ -7,6 +7,7 @@ import { usePermission } from '@/common/hooks/usePermission'
 import { AppPermission } from '@/common/constants/permissions.constant'
 import { money, ReceptionDay, formatReceptionSchedule } from '../types/catalog.types'
 import PackageBranchSchedulesField from '../components/PackageBranchSchedulesField'
+import PackageReceptionSlotsPanel from '../components/PackageReceptionSlotsPanel'
 
 export default function BranchPackagesPage() {
   const { hasPermission } = usePermission()
@@ -61,6 +62,7 @@ export default function BranchPackagesPage() {
   const filtered = packages.filter((p) => `${p.name} ${p.code}`.toLowerCase().includes(q.trim().toLowerCase()))
 
   return <div>
+    <PackageReceptionSlotsPanel packages={packages.filter(pkg => deployedIds(pkg).some(id => methods.some(method => method.id === id && method.code === 'HEALTH_PACKAGE')))} />
     <h1 className="text-2xl font-bold text-slate-950">Gói khám tại chi nhánh</h1>
     <p className="mt-2 text-sm text-slate-500">Quản lý ngày và buổi tiếp nhận từng gói tại chi nhánh. Nội dung và giá gói do quản lý chuỗi thiết lập dùng chung.</p>
     {error && <div role="alert" className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
