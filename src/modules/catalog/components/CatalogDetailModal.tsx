@@ -60,6 +60,7 @@ export default function CatalogDetailModal({
               {/* Name & Specialty */}
               <div>
                 <h3 className="text-base font-bold text-slate-900 leading-snug">{detailItem.name}</h3>
+                <p className="text-sm text-slate-700">Hình thức đặt khám: {detailItem.bookingMethod?.name || '—'}</p>
                 {detailItem.specialty?.name && (
                   <p className="mt-0.5 text-xs text-slate-500">
                     Chuyên khoa: <span className="font-medium text-slate-700">{detailItem.specialty.name}</span>
@@ -107,10 +108,7 @@ export default function CatalogDetailModal({
                 {(() => {
                   const branchNames: string[] = [
                     ...new Set([
-                      ...(detailItem.branchBookingMethods?.map(
-                        (l: any) => l.branchBookingMethod?.branch?.name
-                      ) || []),
-                      detailItem.branchBookingMethod?.branch?.name,
+                      ...(detailItem.branches?.map((link: any) => link.branch?.name) || []),
                     ].filter(Boolean)),
                   ] as string[]
                   return (
@@ -168,7 +166,14 @@ export default function CatalogDetailModal({
           ) : (
             /* Generic detail fallback */
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
-              {cfg.columns.map(([key, label]) => (
+              {(resource === 'branches' ? [
+                ...cfg.columns,
+                ['province', 'Tỉnh/Thành phố'],
+                ['ward', 'Phường/Xã'],
+                ['address', 'Địa chỉ'],
+                ['operatingHours', 'Giờ hoạt động'],
+                ['email', 'Email liên hệ'],
+              ] : cfg.columns).map(([key, label]) => (
                 <div key={key}>
                   <span className="text-slate-400 block text-[11px] mb-0.5">{label}</span>
                   <span className="font-medium text-slate-800">{display(key, at(detailItem, key))}</span>

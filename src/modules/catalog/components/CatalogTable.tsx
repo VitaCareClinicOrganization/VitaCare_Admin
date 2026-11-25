@@ -25,6 +25,7 @@ interface CatalogTableProps {
   onDetail: (row: any) => void
   onEdit: (row: any) => void
   onRemove: (row: any) => void
+  onAssignManager?: (row: any) => void
   canEdit?: boolean
   canSyncVectors?: boolean
   canRemove?: boolean
@@ -53,6 +54,7 @@ export default function CatalogTable({
   onDetail,
   onEdit,
   onRemove,
+  onAssignManager,
   canEdit = true,
   canSyncVectors = true,
   canRemove = true,
@@ -197,6 +199,7 @@ export default function CatalogTable({
                         <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
                           {row.code}
                         </span>
+                        <span className="text-xs text-slate-600">{row.bookingMethod?.name}</span>
                         {row.specialty?.name && (
                           <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                             {row.specialty.name}
@@ -208,10 +211,7 @@ export default function CatalogTable({
                       {(() => {
                         const branchNames: string[] = [
                           ...new Set([
-                            ...(row.branchBookingMethods?.map(
-                              (l: any) => l.branchBookingMethod?.branch?.name
-                            ) || []),
-                            row.branchBookingMethod?.branch?.name,
+                            ...(row.branches?.map((link: any) => link.branch?.name) || []),
                           ].filter(Boolean)),
                         ] as string[]
                         return (
@@ -338,7 +338,9 @@ export default function CatalogTable({
                         <td
                           key={key}
                           className={`px-4 py-3 text-xs ${
-                            isCode
+                            resource === 'branches' && key === 'name'
+                              ? 'min-w-[180px] max-w-[280px] text-slate-900'
+                              : isCode
                               ? 'font-mono text-slate-700 whitespace-nowrap font-medium'
                               : isName
                               ? 'font-semibold text-slate-900 whitespace-nowrap'
@@ -347,7 +349,18 @@ export default function CatalogTable({
                               : 'text-slate-600 min-w-[200px]'
                           }`}
                         >
-                          {display(key, at(row, key))}
+                          {resource === 'branches' && key === 'name' ? <>
+                            <p className="font-semibold [overflow-wrap:anywhere]">{row.name}</p>
+                            <p className="mt-1 text-xs font-normal text-slate-500">{row.province || 'Chưa cập nhật khu vực'}</p>
+                          </> : <>
+                            {display(key, at(row, key))}
+                            {resource === 'branches' && key === 'managerNames' && onAssignManager && <button
+                              type="button"
+                              onClick={() => onAssignManager(row)}
+                              disabled={!row.isActive}
+                              className="mt-1 block rounded py-1 text-xs font-medium text-emerald-800 underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
+                            >{row.managers?.length ? 'Đổi quản lý' : 'Bổ nhiệm quản lý'}</button>}
+                          </>}
                         </td>
                       )
                     })}

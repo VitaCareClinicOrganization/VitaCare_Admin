@@ -42,10 +42,7 @@ type StaffUser = {
   isBlocked?: boolean
   customPermissions?: any
   effectivePermissions?: string[]
-  branchAssignments?: Array<{
-    isPrimary?: boolean
-    branch?: { id: string; code?: string; name?: string }
-  }>
+  branch?: { id: string; code?: string; name?: string }
   doctor?: {
     academicRank?: string
     licenseNumber?: string
@@ -342,8 +339,7 @@ export default function RolesPermissionsPage() {
 
                 // Lấy thông tin cơ sở chi nhánh
                 const branchName =
-                  row.branchAssignments?.find((b) => b.isPrimary)?.branch?.name ||
-                  row.branchAssignments?.[0]?.branch?.name ||
+                  row.branch?.name ||
                   (['admin', 'chain_manager'].includes(cur) ? 'Toàn chuỗi phòng khám' : 'VitaCare Clinic')
 
                 // Lấy thông tin học vị/chuyên khoa nếu là bác sĩ
@@ -506,4 +502,3 @@ export default function RolesPermissionsPage() {
     </div>
   )
 }
-

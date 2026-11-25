@@ -8,7 +8,6 @@ import {
   Clock,
   Search,
   RefreshCw,
-  Eye,
   CheckCircle2,
   AlertCircle,
   X,
@@ -18,7 +17,6 @@ import {
   FileText,
   CreditCard,
   Building2,
-  CalendarDays,
   Loader2,
   Users,
   ChevronLeft,
@@ -26,7 +24,6 @@ import {
   DoorOpen,
   CalendarCheck,
   UserCheck,
-  Video,
 } from 'lucide-react'
 import {
   listDoctorAppointments,
@@ -34,15 +31,14 @@ import {
 } from '@/modules/admin/services/appointments'
 import DoctorWorkSchedulesPage from './DoctorWorkSchedulesPage'
 import DoctorAppHeader from '../components/DoctorAppHeader'
+import DoctorWaitingQueue from '../components/DoctorWaitingQueue'
+import TelehealthSessionHistory from '../components/TelehealthSessionHistory'
 import { getStaffSession, staffRole } from '@/modules/admin/utils/staffSession'
 import { useAppointmentsSocket } from '@/modules/admin/hooks/useAppointmentsSocket'
+import { appointmentDateRange, appointmentMethodCode, appointmentMethodLabel, appointmentState, BOOKING_METHOD_LABELS, shiftAppointmentDate, type AppointmentPeriod } from '../utils/appointmentFilters'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
-}
-
-function ymd(d: Date) {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
 function formatPatientAge(dob?: string) {
@@ -86,35 +82,35 @@ function statusBadge(status?: string, workflowStatus?: string) {
 
   if (st === 'cancelled') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
-        <AlertCircle className="w-3.5 h-3.5 shrink-0" /> Đã hủy
+      <span className="text-xs font-semibold text-rose-700 whitespace-nowrap">
+        Đã hủy
       </span>
     )
   }
   if (st === 'examined' || st === 'completed' || wf === 'COMPLETED') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Đã khám
+      <span className="text-xs font-semibold text-emerald-700 whitespace-nowrap">
+        Đã khám
       </span>
     )
   }
   if (wf === 'CHECKED_IN') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-        <Clock className="w-3.5 h-3.5 shrink-0" /> Đã tiếp nhận
+      <span className="text-xs font-semibold text-blue-700 whitespace-nowrap">
+        Đã tiếp nhận
       </span>
     )
   }
   if (st === 'confirmed' || wf === 'CONFIRMED') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-        <Clock className="w-3.5 h-3.5 shrink-0" /> Chờ khám
+      <span className="text-xs font-semibold text-blue-700 whitespace-nowrap">
+        Chờ khám
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
-      <Clock className="w-3.5 h-3.5 shrink-0" /> Chờ xử lý
+    <span className="text-xs font-semibold text-amber-700 whitespace-nowrap">
+      Chờ xử lý
     </span>
   )
 }
@@ -123,13 +119,13 @@ function paymentBadge(payment?: any, invoice?: any) {
   const isPaid = payment?.paid === true || String(payment?.status || invoice?.status || '').toLowerCase() === 'paid'
   if (isPaid) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
         <CreditCard className="w-3 h-3 shrink-0" /> Đã thu phí
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
       <CreditCard className="w-3 h-3 shrink-0" /> Chưa thu phí
     </span>
   )
@@ -143,17 +139,10 @@ function isTelehealthDoctorAppt(item: any) {
   )
 }
 
-function isWaitingDoctorAppt(item: any) {
-  const status = String(item.workflowStatus || item.status || '').toUpperCase()
-  return status === 'CHECKED_IN' || (
-    isTelehealthDoctorAppt(item) && ['CONFIRMED', 'IN_EXAMINATION'].includes(status)
-  )
-}
-
 function canFinishDoctorAppt(item: any) {
   if (isTelehealthDoctorAppt(item)) return false
   const status = String(item.workflowStatus || item.status || '').toUpperCase()
-  return !['EXAMINED', 'COMPLETED', 'CANCELLED'].includes(status)
+  return ['CHECKED_IN'].includes(status)
 }
 
 export default function DoctorHome() {
@@ -177,10 +166,29 @@ export default function DoctorHome() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
-  const [dateFilter, setDateFilter] = useState<string>('') // '' = all dates, or 'YYYY-MM-DD'
+  const [period, setPeriod] = useState<AppointmentPeriod>('all')
+  const [dateFilter, setDateFilter] = useState(() => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()))
+  const [methodFilter, setMethodFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('') // '' = all statuses
   const [page, setPage] = useState(1)
   const pageSize = 10
+  const dateRange = useMemo(() => appointmentDateRange(period, dateFilter), [period, dateFilter])
+  const methodOptions = useMemo(() => {
+    const labels = new Map(Object.entries(BOOKING_METHOD_LABELS))
+    appointments.forEach(item => {
+      const code = appointmentMethodCode(item)
+      if (code && !labels.has(code)) labels.set(code, appointmentMethodLabel(item))
+    })
+    return [...labels.entries()]
+  }, [appointments])
+
+  useEffect(() => { setPage(1) }, [period, dateFilter, methodFilter, searchTerm, statusFilter, isHistoryView, isWaitingView])
+
+  const selectStatsStatus = (status: string) => {
+    setStatusFilter(status)
+    setPage(1)
+    if (isHistoryView || isWaitingView) navigate('/doctor')
+  }
 
   // Modal chi tiết
   const [detailAppt, setDetailAppt] = useState<any | null>(null)
@@ -251,41 +259,19 @@ export default function DoctorHome() {
     }, [loadAppointments]),
   })
 
-  // Lọc dữ liệu Lịch khám / Chờ khám / Lịch sử
+  const scopedAppointments = useMemo(() => appointments.filter(item => {
+      const date = String(item.appointmentDate || '').slice(0, 10)
+      if (dateRange.from && (!date || date < dateRange.from || date > dateRange.to)) return false
+      if (methodFilter && appointmentMethodCode(item) !== methodFilter) return false
+
+      return true
+    }), [appointments, dateRange, methodFilter])
+
   const filteredList = useMemo(() => {
-    const list = appointments.filter((item) => {
-      const st = String(item.status || '').toLowerCase()
-      const wf = String(item.workflowStatus || '').toUpperCase()
-
-      if (isHistoryView) {
-        // Tab Lịch sử: chỉ hiển thị lịch đã khám xong
-        if (!(st === 'examined' || st === 'completed' || wf === 'COMPLETED')) return false
-      } else if (isWaitingView) {
-        // Online consultations are ready after confirmation, without reception check-in.
-        if (!isWaitingDoctorAppt(item)) return false
-      } else if (statusFilter) {
-        // Tab Lịch khám: nếu người dùng chủ động chọn lọc trạng thái
-        if (statusFilter === 'CHECKED_IN') {
-          if (!isWaitingDoctorAppt(item)) return false
-        } else if (statusFilter === 'COMPLETED') {
-          if (st !== 'examined' && st !== 'completed' && wf !== 'COMPLETED') return false
-        } else if (statusFilter === 'CANCELLED') {
-          if (st !== 'cancelled') return false
-        } else if (statusFilter === 'CONFIRMED') {
-          if (st !== 'confirmed' && wf !== 'CONFIRMED') return false
-        } else if (statusFilter === 'PENDING') {
-          if (st !== 'pending' && wf !== 'PENDING') return false
-        }
-      }
-
-      // Lọc theo ngày
-      if (dateFilter) {
-        const d = String(item.appointmentDate || '').slice(0, 10)
-        if (d !== dateFilter) return false
-      }
-
-      // Tìm kiếm từ khóa
-      const q = searchTerm.trim().toLowerCase()
+    const selectedStatus = isHistoryView ? 'COMPLETED' : isWaitingView ? 'CHECKED_IN' : statusFilter
+    const q = searchTerm.trim().toLowerCase()
+    const list = scopedAppointments.filter(item => {
+      if (selectedStatus && appointmentState(item) !== selectedStatus) return false
       if (q) {
         const ticket = String(item.ticket || item.bookingCode || '').toLowerCase()
         const patientName = String(item.patient?.fullName || '').toLowerCase()
@@ -342,28 +328,22 @@ export default function DoctorHome() {
     }
 
     return list
-  }, [appointments, isHistoryView, isWaitingView, statusFilter, dateFilter, searchTerm])
+  }, [scopedAppointments, isHistoryView, isWaitingView, statusFilter, searchTerm])
 
   // Phân trang
   const totalPages = Math.max(1, Math.ceil(filteredList.length / pageSize))
+  useEffect(() => { setPage(current => Math.min(current, totalPages)) }, [totalPages])
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize
     return filteredList.slice(start, start + pageSize)
   }, [filteredList, page, pageSize])
 
-  // Thống kê nhanh
+  // Thống kê theo thời gian và hình thức khám, độc lập với tìm kiếm và trạng thái của bảng.
   const stats = useMemo(() => {
-    const checkedIn = appointments.filter(isWaitingDoctorAppt).length
-    const completed = appointments.filter((a) => {
-      const st = String(a.status || '').toLowerCase()
-      const wf = String(a.workflowStatus || '').toUpperCase()
-      return st === 'examined' || st === 'completed' || wf === 'COMPLETED'
-    }).length
-    const cancelled = appointments.filter((a) => String(a.status || '').toLowerCase() === 'cancelled').length
-    const total = appointments.length
-
-    return { total, checkedIn, completed, cancelled }
-  }, [appointments])
+    const count = (status: string) => scopedAppointments.filter(item => appointmentState(item) === status).length
+    return { total: scopedAppointments.length, pending: count('PENDING'), checkedIn: count('CHECKED_IN'), completed: count('COMPLETED'), cancelled: count('CANCELLED') }
+  }, [scopedAppointments])
+  const activeStatsStatus = isHistoryView ? 'COMPLETED' : isWaitingView ? 'CHECKED_IN' : statusFilter
 
   if (!token || !user) return null
 
@@ -383,20 +363,20 @@ export default function DoctorHome() {
         onLogout={() => void performLogout()}
       />
 
-      <main className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full space-y-5 lg:pl-[264px]" role="main">
+      <main className="min-w-0 p-4 sm:p-6 max-w-[1600px] mx-auto w-full space-y-5 lg:pl-[264px]" role="main">
         {/* Tiêu đề trang & Tác vụ chính */}
         {!isScheduleView ? (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded border border-slate-200/90 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
                 <span className={`p-2 rounded border shrink-0 ${isWaitingView
-                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    ? 'bg-[#28a745]/10 text-[#218838] border-[#28a745]/20'
                     : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
                   {isHistoryView ? (
                     <Users className="w-5 h-5" />
                   ) : isWaitingView ? (
-                    <UserCheck className="w-5 h-5 text-blue-700" />
+                    <UserCheck className="w-5 h-5" />
                   ) : (
                     <CalendarCheck className="w-5 h-5" />
                   )}
@@ -411,9 +391,9 @@ export default function DoctorHome() {
                   </h1>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {isHistoryView
-                      ? 'Danh sách hồ sơ bệnh nhân đã hoàn thành khám tại phòng khám.'
+                      ? 'Danh sách bệnh nhân đã hoàn tất khám tại cơ sở hoặc tư vấn trực tuyến.'
                       : isWaitingView
-                        ? 'Ca khám tại cơ sở đã tiếp nhận và lịch tư vấn online đã xác nhận. Lọc ngày để xem lịch cần xử lý.'
+                        ? 'Theo dõi bệnh nhân đã tiếp nhận theo thứ tự khám. Lịch tư vấn online được hiển thị riêng.'
                         : 'Danh sách toàn bộ lịch hẹn khám bệnh của bác sĩ.'}
                   </p>
                 </div>
@@ -435,7 +415,7 @@ export default function DoctorHome() {
 
         {/* Thông báo lỗi nếu có */}
         {!isScheduleView && error ? (
-          <div className="p-4 rounded border border-rose-200 bg-rose-50 text-rose-700 text-xs shadow-2xs font-medium flex items-center gap-2">
+          <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs shadow-2xs font-medium flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -450,140 +430,41 @@ export default function DoctorHome() {
             readOnly={true}
             initialDoctorId={user?.doctor?.id || user?.doctorId || user?.id}
           />
+        ) : isWaitingView ? (
+          <DoctorWaitingQueue
+            appointments={appointments}
+            loading={loading}
+            finishingId={finishingId}
+            onFinish={handleFinishExam}
+            onEnterRoom={id => navigate(`/doctor/telehealth/${id}`)}
+            onOpenCalendar={() => navigate('/doctor')}
+          />
         ) : (
           /* ============================================================ */
           /* VIEW 2 & 3: LỊCH KHÁM (CHECKED-IN) & LỊCH SỬ BỆNH NHÂN */
           /* ============================================================ */
-          <div className="space-y-4">
-            {/* Thẻ thống kê KPI (Bấm để lọc nhanh trạng thái, viền mỏng nhẹ tinh tế) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div
-                onClick={() => setStatusFilter('')}
-                className={`bg-white p-4 rounded border transition-all cursor-pointer ${!statusFilter ? 'border-emerald-300 bg-emerald-50/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'
-                  } flex items-center justify-between`}
-                title="Bấm để xem tất cả lịch khám"
-              >
-                <div>
-                  <p className="text-xs font-medium text-slate-500">Tổng ca khám</p>
-                  <p className="text-2xl font-extrabold text-slate-900 mt-1">{stats.total}</p>
-                </div>
-                <span className="p-2.5 rounded bg-slate-50 text-slate-600 border border-slate-200/70 shrink-0">
-                  <CalendarDays className="w-5 h-5" />
-                </span>
-              </div>
-
-              <div
-                onClick={() => setStatusFilter(statusFilter === 'CHECKED_IN' ? '' : 'CHECKED_IN')}
-                className={`bg-white p-4 rounded border transition-all cursor-pointer ${statusFilter === 'CHECKED_IN' ? 'border-blue-300 bg-blue-50/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'
-                  } flex items-center justify-between`}
-                title="Bấm để lọc ca đã tiếp nhận"
-              >
-                <div>
-                  <p className="text-xs font-medium text-slate-500">Chờ khám / Tư vấn online</p>
-                  <p className="text-2xl font-extrabold text-blue-700 mt-1">{stats.checkedIn}</p>
-                </div>
-                <span className="p-2.5 rounded bg-blue-50 text-blue-700 border border-blue-200/70 shrink-0">
-                  <Clock className="w-5 h-5" />
-                </span>
-              </div>
-
-              <div
-                onClick={() => setStatusFilter(statusFilter === 'COMPLETED' ? '' : 'COMPLETED')}
-                className={`bg-white p-4 rounded border transition-all cursor-pointer ${statusFilter === 'COMPLETED' ? 'border-emerald-300 bg-emerald-50/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'
-                  } flex items-center justify-between`}
-                title="Bấm để lọc ca đã khám xong"
-              >
-                <div>
-                  <p className="text-xs font-medium text-slate-500">Đã khám xong</p>
-                  <p className="text-2xl font-extrabold text-emerald-700 mt-1">{stats.completed}</p>
-                </div>
-                <span className="p-2.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/70 shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </span>
-              </div>
-
-              <div
-                onClick={() => setStatusFilter(statusFilter === 'CANCELLED' ? '' : 'CANCELLED')}
-                className={`bg-white p-4 rounded border transition-all cursor-pointer ${statusFilter === 'CANCELLED' ? 'border-rose-300 bg-rose-50/20 shadow-2xs' : 'border-slate-200/80 shadow-2xs hover:border-slate-300'
-                  } flex items-center justify-between`}
-                title="Bấm để lọc ca đã hủy"
-              >
-                <div>
-                  <p className="text-xs font-medium text-slate-500">Đã hủy</p>
-                  <p className="text-2xl font-extrabold text-rose-700 mt-1">{stats.cancelled}</p>
-                </div>
-                <span className="p-2.5 rounded bg-rose-50 text-rose-700 border border-rose-200/70 shrink-0">
-                  <AlertCircle className="w-5 h-5" />
-                </span>
-              </div>
+          <div className="min-w-0 space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              {[
+                { status: '', title: 'Tổng lịch', value: stats.total, description: 'Bấm để xem tất cả', surface: 'bg-white', border: 'border-slate-200 hover:border-slate-300', selectedBorder: 'border-slate-400', color: 'text-slate-900' },
+                { status: 'PENDING', title: 'Chờ xác nhận', value: stats.pending, description: 'Chưa tiếp nhận / chờ xử lý', surface: 'bg-amber-50/30', border: 'border-amber-200 hover:border-amber-300', selectedBorder: 'border-amber-400', color: 'text-amber-800' },
+                { status: 'CHECKED_IN', title: 'Đang chờ khám', value: stats.checkedIn, description: 'Đã tiếp nhận / tư vấn online', surface: 'bg-blue-50/35', border: 'border-blue-200 hover:border-blue-300', selectedBorder: 'border-blue-400', color: 'text-blue-800' },
+                { status: 'COMPLETED', title: 'Đã khám', value: stats.completed, description: 'Hoàn thành ca khám', surface: 'bg-emerald-50/40', border: 'border-emerald-200 hover:border-emerald-300', selectedBorder: 'border-emerald-400', color: 'text-emerald-800' },
+                { status: 'CANCELLED', title: 'Đã hủy', value: stats.cancelled, description: 'Lịch hẹn đã hủy', surface: 'bg-slate-50/70', border: 'border-slate-200 hover:border-slate-300', selectedBorder: 'border-slate-400', color: 'text-slate-600' },
+              ].map(card => (
+                <button key={card.status} type="button" onClick={() => selectStatsStatus(card.status)} aria-pressed={activeStatsStatus === card.status}
+                  className={`flex h-full min-w-0 flex-col rounded border px-4 py-3 text-left outline-none transition-colors duration-150 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600/60 cursor-pointer ${card.surface} ${activeStatsStatus === card.status ? card.selectedBorder : card.border}`}>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{card.title}</p>
+                  <p className={`mt-1 text-2xl font-bold leading-7 tabular-nums ${card.color}`}>{card.value}</p>
+                  <p className="mt-1 text-[11px] leading-4 text-slate-400">{card.description}</p>
+                </button>
+              ))}
             </div>
 
-            {/* Thanh tìm kiếm & Bộ lọc */}
-            <div className="bg-white p-4 rounded border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div className="flex-1 relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value)
-                    setPage(1)
-                  }}
-                  placeholder="Tìm theo tên bệnh nhân, mã vé, mã BN, số điện thoại..."
-                  className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition-all placeholder:text-slate-400"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Lọc trạng thái nhanh (chỉ hiển thị ở tab Lịch khám chung) */}
-                {!isHistoryView && !isWaitingView && (
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value)
-                      setPage(1)
-                    }}
-                    className="px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-emerald-600 cursor-pointer"
-                  >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="CHECKED_IN">Chờ khám / Tư vấn online</option>
-                    <option value="COMPLETED">Đã khám xong</option>
-                    <option value="CONFIRMED">Chờ khám / Đã xác nhận</option>
-                    <option value="PENDING">Chờ xử lý</option>
-                    <option value="CANCELLED">Đã hủy</option>
-                  </select>
-                )}
-
-                <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => {
-                      setDateFilter(e.target.value)
-                      setPage(1)
-                    }}
-                    className="px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-emerald-600 cursor-pointer"
-                    title="Lọc theo ngày khám"
-                  />
-                  {dateFilter ? (
-                    <button
-                      type="button"
-                      onClick={() => setDateFilter('')}
-                      className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
-                      title="Xem tất cả các ngày"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-
-            {/* Bảng danh sách lịch khám */}
-            <div className="bg-white rounded border border-slate-200/90 shadow-xs overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-slate-900">
+            {/* Danh sách lịch khám & Bộ lọc */}
+            <div className="min-w-0 max-w-full bg-white rounded border border-slate-200/90 shadow-xs overflow-hidden">
+              <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="min-w-0 text-sm font-bold text-slate-900">
                   {isHistoryView
                     ? 'Danh sách bệnh nhân đã khám'
                     : isWaitingView
@@ -594,6 +475,8 @@ export default function DoctorHome() {
                           ? 'Danh sách bệnh nhân đã khám xong'
                           : statusFilter === 'CANCELLED'
                             ? 'Danh sách lịch hẹn đã hủy'
+                            : statusFilter === 'PENDING'
+                              ? 'Danh sách lịch hẹn chờ xác nhận'
                             : 'Danh sách toàn bộ lịch khám'}
                 </h2>
                 <span className="text-xs text-slate-500 whitespace-nowrap">
@@ -601,11 +484,92 @@ export default function DoctorHome() {
                 </span>
               </div>
 
-              <div className="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <table className="w-full text-left text-xs border-collapse">
+              {/* Thanh tìm kiếm & Bộ lọc */}
+              <div className="space-y-4 border-b border-slate-200/80 p-4">
+              <div className="flex-1 relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value)
+                    setPage(1)
+                  }}
+                  placeholder="Tìm theo tên bệnh nhân, mã vé, mã BN, số điện thoại..."
+                  aria-label="Tìm kiếm lịch khám"
+                  id="doctor-appointment-search"
+                  className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-0 max-w-full">
+                  <p className="mb-1.5 text-[11px] font-semibold text-slate-500">Thời gian khám</p>
+                  <div className="inline-flex max-w-full flex-wrap rounded border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Khoảng thời gian">
+                    {([['all', 'Tất cả'], ['day', 'Ngày'], ['week', 'Tuần'], ['month', 'Tháng']] as const).map(([value, label]) => (
+                      <button key={value} type="button" aria-pressed={period === value} onClick={() => setPeriod(value)}
+                        className={`rounded px-3 py-1.5 text-xs font-semibold cursor-pointer ${period === value ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+                {period !== 'all' && <div>
+                  <label htmlFor="doctor-period-date" className="mb-1.5 block text-[11px] font-semibold text-slate-500">{period === 'month' ? 'Chọn tháng' : period === 'week' ? 'Chọn ngày trong tuần' : 'Chọn ngày'}</label>
+                  <div className="flex h-10 items-center rounded border border-slate-200 bg-white">
+                    <button type="button" aria-label="Khoảng thời gian trước" onClick={() => setDateFilter(shiftAppointmentDate(dateFilter, period, -1))} className="h-full px-2 text-slate-500 hover:bg-slate-50 cursor-pointer"><ChevronLeft className="h-4 w-4" /></button>
+                    <input id="doctor-period-date" type={period === 'month' ? 'month' : 'date'} value={period === 'month' ? dateFilter.slice(0, 7) : dateFilter}
+                      onChange={event => {
+                        if (!event.target.value) { setPeriod('all'); return }
+                        setDateFilter(period === 'month' ? `${event.target.value}-01` : event.target.value)
+                      }} className="min-w-0 bg-transparent px-1 text-xs text-slate-700 outline-none" />
+                    <button type="button" aria-label="Khoảng thời gian sau" onClick={() => setDateFilter(shiftAppointmentDate(dateFilter, period, 1))} className="h-full px-2 text-slate-500 hover:bg-slate-50 cursor-pointer"><ChevronRight className="h-4 w-4" /></button>
+                  </div>
+                </div>}
+                <label className="w-full min-w-0 sm:min-w-[190px] sm:flex-1 sm:max-w-[250px]">
+                  <span className="mb-1.5 block text-[11px] font-semibold text-slate-500">Hình thức khám</span>
+                  <select value={methodFilter} onChange={event => setMethodFilter(event.target.value)} className="h-10 w-full rounded border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-emerald-600 cursor-pointer">
+                    <option value="">Tất cả hình thức</option>
+                    {methodOptions.map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+                  </select>
+                </label>
+                {/* Lọc trạng thái nhanh (chỉ hiển thị ở tab Lịch khám chung) */}
+                {!isHistoryView && !isWaitingView && (
+                  <label className="w-full min-w-0 sm:w-auto">
+                  <span className="mb-1.5 block text-[11px] font-semibold text-slate-500">Trạng thái</span>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value)
+                      setPage(1)
+                    }}
+                    className="h-10 w-full px-3 text-xs bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-emerald-600 cursor-pointer"
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="PENDING">Chờ xác nhận</option>
+                    <option value="CHECKED_IN">Đang chờ khám / tư vấn</option>
+                    <option value="COMPLETED">Đã khám</option>
+                    <option value="CANCELLED">Đã hủy</option>
+                  </select>
+                  </label>
+                )}
+                {(period !== 'all' || methodFilter || searchTerm || statusFilter) && <button type="button" onClick={() => { setPeriod('all'); setMethodFilter(''); setSearchTerm(''); setStatusFilter('') }} className="inline-flex h-10 items-center gap-1.5 px-2 text-xs font-semibold text-slate-500 hover:text-emerald-700 cursor-pointer"><X className="h-3.5 w-3.5" />Xóa bộ lọc</button>}
+              </div>
+              </div>
+
+              {/* Bảng danh sách lịch khám */}
+              <div className="w-full overflow-x-auto overscroll-x-contain" tabIndex={0} role="region" aria-label="Danh sách lịch khám, cuộn ngang để xem đầy đủ các cột">
+                <table className={`w-full table-fixed text-left text-xs border-collapse ${!isWaitingView && !isHistoryView ? 'min-w-[1120px]' : 'min-w-[1000px]'}`}>
+                  <colgroup>
+                    <col className="w-12" />
+                    <col className="w-[190px]" />
+                    <col className="w-[210px]" />
+                    <col className="w-[140px]" />
+                    <col />
+                    {!isWaitingView && !isHistoryView && <col className="w-[120px]" />}
+                    <col className="w-[248px]" />
+                  </colgroup>
                   <thead>
                     <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-600 font-bold whitespace-nowrap">
-                      <th className="py-2.5 px-3 w-10 text-center">STT</th>
+                      <th className="py-2.5 px-3 text-center">STT</th>
                       <th className="py-2.5 px-3">Mã phiếu</th>
                       <th className="py-2.5 px-3">Bệnh nhân</th>
                       <th className="py-2.5 px-3">Thời gian khám</th>
@@ -613,7 +577,7 @@ export default function DoctorHome() {
                       {!isWaitingView && !isHistoryView && (
                         <th className="py-2.5 px-3">Trạng thái</th>
                       )}
-                      <th className="py-2.5 px-3 text-right whitespace-nowrap min-w-[200px]">Thao tác</th>
+                      <th className="py-2.5 px-3 text-right whitespace-nowrap">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -630,7 +594,6 @@ export default function DoctorHome() {
                       <tr>
                         <td colSpan={!isWaitingView && !isHistoryView ? 7 : 6} className="py-12 text-center text-slate-400">
                           <div className="flex flex-col items-center justify-center gap-2">
-                            <Calendar className="w-8 h-8 text-slate-300 stroke-[1.5]" />
                             <span className="font-medium">Không tìm thấy lịch khám phù hợp.</span>
                             <span className="text-[11px] text-slate-400">
                               {isWaitingView
@@ -653,19 +616,18 @@ export default function DoctorHome() {
                             <td className="py-2.5 px-3 text-center font-semibold text-slate-500 whitespace-nowrap">
                               {stt}
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap">
-                              <span className="font-bold text-slate-900 block">{item.ticket || item.bookingCode || '—'}</span>
-                              {isTelehealthDoctorAppt(item) ? (
-                                <span className="text-[10px] text-blue-700 font-semibold block">Tư vấn online</span>
-                              ) : item.visitQueueNumber ? (
+                            <td className="py-2.5 px-3 align-middle">
+                              <span className="font-bold text-slate-900 block truncate" title={item.ticket || item.bookingCode}>{item.ticket || item.bookingCode || '—'}</span>
+                              <span className="text-[10px] text-slate-500 font-medium block truncate" title={appointmentMethodLabel(item)}>{appointmentMethodLabel(item)}</span>
+                              {item.visitQueueNumber != null && item.visitQueueNumber !== '' ? (
                                 <span className="text-[10px] text-emerald-700 font-semibold block">
                                   STT khám: {item.visitQueueNumber}
                                 </span>
                               ) : null}
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap">
-                              <span className="font-bold text-slate-900 block">{patient?.fullName || '—'}</span>
-                              <span className="text-[11px] text-slate-500 block">
+                            <td className="py-2.5 px-3 align-middle">
+                              <span className="font-bold text-slate-900 block truncate" title={patient?.fullName}>{patient?.fullName || '—'}</span>
+                              <span className="text-[11px] text-slate-500 block truncate" title={`${formatGenderVi(patient?.gender)} · ${formatPatientAge(patient?.dateOfBirth)} · ${patient?.phone || '—'}`}>
                                 {formatGenderVi(patient?.gender)} · {formatPatientAge(patient?.dateOfBirth)} · {patient?.phone || '—'}
                               </span>
                             </td>
@@ -674,16 +636,16 @@ export default function DoctorHome() {
                                 {item.startTime ? `${item.startTime}${item.endTime ? ` - ${item.endTime}` : ''}` : '—'}
                               </span>
                               <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                                <Calendar className="w-3 h-3 shrink-0" /> {formatApptDateVi(item.appointmentDate)}
+                                {formatApptDateVi(item.appointmentDate)}
                               </span>
                               {item.checkedInAt ? (
                                 <span className="text-[10px] text-blue-700 font-semibold flex items-center gap-1 mt-0.5">
-                                  <Clock className="w-3 h-3 shrink-0" /> Check-in: {new Date(item.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                  Check-in: {new Date(item.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               ) : null}
                             </td>
-                            <td className="py-2.5 px-3 max-w-[260px]">
-                              <p className="text-slate-600 line-clamp-2" title={item.symptoms || 'Khám theo lịch hẹn'}>
+                            <td className="py-2.5 px-3 align-middle">
+                              <p className="text-slate-600 line-clamp-2 break-words [overflow-wrap:anywhere]" title={item.symptoms || 'Khám theo lịch hẹn'}>
                                 {item.symptoms || 'Khám theo lịch hẹn'}
                               </p>
                             </td>
@@ -691,41 +653,34 @@ export default function DoctorHome() {
                               <td className="py-2.5 px-3 whitespace-nowrap">{statusBadge(item.status, item.workflowStatus)}</td>
                             )}
                             <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                              <div className="inline-flex items-center justify-end gap-1.5">
-                                {isTelehealthDoctorAppt(item) && ['CONFIRMED', 'CHECKED_IN', 'IN_EXAMINATION'].includes(wf || st.toUpperCase()) && (
+                              <div className="flex flex-nowrap items-center justify-end gap-1.5">
+                                {isTelehealthDoctorAppt(item) && ['CONFIRMED', 'CHECKED_IN'].includes(wf || st.toUpperCase()) && (
                                   <button
                                     type="button"
-                                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+                                    className="inline-flex shrink-0 items-center justify-center px-2.5 py-1.5 rounded text-xs font-bold text-white bg-blue-700  cursor-pointer whitespace-nowrap shadow-xs"
                                     onClick={() => navigate(`/doctor/telehealth/${item.id}`)}
                                     title="Vào phòng khám trực tuyến với bệnh nhân này"
                                   >
-                                    <Video className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Tư vấn từ xa</span>
+                                    <span>Vào phòng khám</span>
                                   </button>
                                 )}
                                 {canFinish && (
                                   <button
                                     type="button"
                                     disabled={finishingId === item.id}
-                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+                                    className="inline-flex shrink-0 items-center justify-center px-3 py-1.5 rounded border border-blue-700 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 hover:border-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap shadow-xs"
                                     onClick={() => void handleFinishExam(item)}
                                     title="Hoàn thành khám cho bệnh nhân này"
                                   >
-                                    {finishingId === item.id ? (
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-                                    ) : (
-                                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                                    )}
-                                    <span>Hoàn thành khám</span>
+                                    <span>{finishingId === item.id ? 'Đang lưu…' : 'Hoàn thành khám'}</span>
                                   </button>
                                 )}
                                 <button
                                   type="button"
-                                  className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                                  className="inline-flex items-center justify-center px-2.5 py-1.5 rounded text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
                                   onClick={() => setDetailAppt(item)}
                                   title="Xem chi tiết phiếu khám"
                                 >
-                                  <Eye className="w-3.5 h-3.5 shrink-0 text-slate-500" />
                                   <span>Chi tiết</span>
                                 </button>
                               </div>
@@ -776,10 +731,11 @@ export default function DoctorHome() {
           onClick={() => setDetailAppt(null)}
         >
           <div
-            className="bg-white rounded border border-slate-200 shadow-xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded border border-slate-200 shadow-xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto break-words [overflow-wrap:anywhere]"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
+            aria-label="Chi tiết lịch khám bệnh"
           >
             {/* Header Modal */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -791,6 +747,7 @@ export default function DoctorHome() {
                 type="button"
                 className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
                 onClick={() => setDetailAppt(null)}
+                aria-label="Đóng chi tiết lịch khám"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -801,7 +758,7 @@ export default function DoctorHome() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-emerald-700" /> Thông tin bệnh nhân
               </h4>
-              <div className="grid grid-cols-2 gap-3 text-xs p-3 rounded bg-slate-50 border border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs pt-1">
                 <div>
                   <span className="text-slate-500 block">Họ và tên:</span>
                   <b className="text-slate-900">{detailAppt.patient?.fullName || '—'}</b>
@@ -822,7 +779,7 @@ export default function DoctorHome() {
                     <Phone className="w-3 h-3 text-slate-400" /> {detailAppt.patient?.phone || '—'}
                   </span>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <span className="text-slate-500 block">Địa chỉ:</span>
                   <span className="text-slate-800 flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-slate-400 shrink-0" /> {detailAppt.patient?.address || '—'}
@@ -836,7 +793,7 @@ export default function DoctorHome() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-emerald-700" /> Ca khám & Phòng khám
               </h4>
-              <div className="grid grid-cols-2 gap-3 text-xs p-3 rounded bg-slate-50 border border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs pt-1">
                 <div>
                   <span className="text-slate-500 block">Ngày khám:</span>
                   <b className="text-slate-900">{formatApptDateVi(detailAppt.appointmentDate)}</b>
@@ -844,6 +801,10 @@ export default function DoctorHome() {
                 <div>
                   <span className="text-slate-500 block">Khung giờ:</span>
                   <b className="text-slate-900">{detailAppt.startTime || '—'} - {detailAppt.endTime || '—'}</b>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Số thứ tự khám:</span>
+                  <b className="text-emerald-800">{detailAppt.visitQueueNumber ?? 'Chưa được cấp'}</b>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Phòng khám:</span>
@@ -871,10 +832,14 @@ export default function DoctorHome() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-emerald-700" /> Triệu chứng ban đầu
               </h4>
-              <div className="p-3 rounded bg-emerald-50/40 border border-emerald-100 text-xs text-slate-700 font-medium">
+              <div className="pt-1 whitespace-pre-wrap text-xs text-slate-700 font-medium">
                 {detailAppt.symptoms || 'Bệnh nhân chưa cung cấp triệu chứng cụ thể.'}
               </div>
             </div>
+
+            {isTelehealthDoctorAppt(detailAppt) && appointmentState(detailAppt) === 'COMPLETED' ? (
+              <TelehealthSessionHistory key={detailAppt.id} appointmentId={detailAppt.id} />
+            ) : null}
 
             {/* Footer Modal */}
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -891,7 +856,7 @@ export default function DoctorHome() {
                   <button
                     type="button"
                     disabled={finishingId === detailAppt.id}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded border border-blue-700 text-white bg-blue-700 hover:bg-blue-800 hover:border-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
                     onClick={async () => {
                       await handleFinishExam(detailAppt)
                     }}

@@ -69,13 +69,13 @@ export default function ScheduleToolbar({
     <div
       className={`${
         !isDoctor ? 'mt-4' : 'mt-1'
-      } flex flex-wrap items-center justify-between gap-2.5 rounded border border-slate-200 bg-white px-3 py-2 shadow-xs`}
+      } flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-xs`}
     >
       <div className="flex flex-wrap items-center gap-2.5">
         {viewMode === 'grid' && (
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Bộ điều hướng tuần: < DD/MM – DD/MM/YYYY > */}
-            <div className="flex items-center rounded border border-slate-200 bg-white shadow-2xs">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-2xs">
               <button
                 type="button"
                 title="Tuần trước"
@@ -117,7 +117,7 @@ export default function ScheduleToolbar({
             <button
               type="button"
               onClick={() => setCurrentMonday(getMonday(new Date()))}
-              className="rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-600 hover:text-emerald-700 cursor-pointer shadow-2xs whitespace-nowrap transition"
+              className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-600 hover:text-emerald-700 cursor-pointer shadow-2xs whitespace-nowrap transition"
             >
               Hôm nay
             </button>
@@ -127,7 +127,7 @@ export default function ScheduleToolbar({
         {viewMode === 'month' && (
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Bộ điều hướng tháng: < Tháng M / YYYY > */}
-            <div className="flex items-center rounded border border-slate-200 bg-white shadow-2xs">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-2xs">
               <button
                 type="button"
                 title="Tháng trước"
@@ -161,7 +161,7 @@ export default function ScheduleToolbar({
             <button
               type="button"
               onClick={() => setCurrentMonthDate(new Date())}
-              className="rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-600 hover:text-emerald-700 cursor-pointer shadow-2xs whitespace-nowrap transition"
+              className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-emerald-600 hover:text-emerald-700 cursor-pointer shadow-2xs whitespace-nowrap transition"
             >
               Tháng này
             </button>
@@ -193,14 +193,14 @@ export default function ScheduleToolbar({
                 placeholder="Tìm bác sĩ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-28 sm:w-32 rounded border border-slate-200 bg-white py-1 pl-7 pr-2 text-xs outline-none focus:border-emerald-600 text-slate-800 placeholder:text-slate-400"
+                className="w-28 sm:w-32 rounded-xl border border-slate-200 bg-white py-1 pl-7 pr-2 text-xs outline-none focus:border-emerald-600 text-slate-800 placeholder:text-slate-400"
               />
             </div>
 
             {/* Chi nhánh: Nếu là Quản lý chi nhánh có cơ sở chỉ định thì hiển thị Badge cố định */}
             {isBranchManager && assignedBranch ? (
               <div
-                className="inline-flex items-center gap-1.5 rounded border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 shrink-0 shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 shrink-0 shadow-2xs"
                 title={`Phạm vi cơ sở: ${assignedBranch.name}${assignedBranch.code ? ` (${assignedBranch.code})` : ''}`}
               >
                 <Building2 className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
@@ -210,7 +210,7 @@ export default function ScheduleToolbar({
               <select
                 value={filterBranch}
                 onChange={(e) => setFilterBranch(e.target.value)}
-                className="max-w-[130px] truncate rounded border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
+                className="max-w-[130px] truncate rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
               >
                 <option value="">Tất cả Chi nhánh</option>
                 {branches.map((b) => (
@@ -227,7 +227,7 @@ export default function ScheduleToolbar({
                 setFilterSpecialty(e.target.value)
                 setFilterDoctor('')
               }}
-              className="max-w-[125px] truncate rounded border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
+              className="max-w-[125px] truncate rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
             >
               <option value="">Tất cả Chuyên khoa</option>
               {specialties.map((s) => (
@@ -240,7 +240,7 @@ export default function ScheduleToolbar({
             <select
               value={filterDoctor}
               onChange={(e) => setFilterDoctor(e.target.value)}
-              className="max-w-[130px] truncate rounded border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
+              className="max-w-[130px] truncate rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-emerald-600 shrink-0 cursor-pointer"
             >
               <option value="">Tất cả Bác sĩ</option>
               {availableDoctorsForSelect.map((d) => (
@@ -258,7 +258,7 @@ export default function ScheduleToolbar({
         <button
           type="button"
           onClick={() => setViewMode('grid')}
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
+          className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
             viewMode === 'grid'
               ? 'border border-emerald-600 bg-white text-emerald-700 shadow-2xs'
               : 'border border-transparent text-slate-600 hover:text-slate-900'
@@ -270,7 +270,7 @@ export default function ScheduleToolbar({
         <button
           type="button"
           onClick={() => setViewMode('month')}
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
+          className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
             viewMode === 'month'
               ? 'border border-emerald-600 bg-white text-emerald-700 shadow-2xs'
               : 'border border-transparent text-slate-600 hover:text-slate-900'
@@ -282,7 +282,7 @@ export default function ScheduleToolbar({
         <button
           type="button"
           onClick={() => setViewMode('table')}
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
+          className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold cursor-pointer transition ${
             viewMode === 'table'
               ? 'border border-emerald-600 bg-white text-emerald-700 shadow-2xs'
               : 'border border-transparent text-slate-600 hover:text-slate-900'

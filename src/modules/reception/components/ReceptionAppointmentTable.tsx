@@ -276,10 +276,10 @@ export default function ReceptionAppointmentTable({
                 >
                   <td className="py-3 px-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200">
+                      <span className="font-mono font-bold text-black-800 text-xs">
                         {row.ticket || '—'}
                       </span>
-                      {pastSlot && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Quá giờ</span>}
+                      {pastSlot && <span className="text-[10px] font-bold text-rose-700">Quá giờ</span>}
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
                       {appointmentSourceLabel(row)} · {formatDateTimeVi(row.createdAt)}
@@ -309,7 +309,7 @@ export default function ReceptionAppointmentTable({
                     ) : (
                       <span className="text-slate-400 italic">Chưa chọn</span>
                     )}
-                    {!row.isTelehealth && row.bookingMethod?.code !== 'ONLINE_CONSULTATION' && row.visitQueueNumber != null && row.visitQueueNumber !== '' && (
+                    {row.visitQueueNumber != null && row.visitQueueNumber !== '' && (
                       <div className="text-[11px] font-bold text-blue-700">STT: {row.visitQueueNumber}</div>
                     )}
                   </td>
@@ -318,32 +318,32 @@ export default function ReceptionAppointmentTable({
                     {isPaid ? (
                       isOnlinePaid ? (
                         <div className="inline-flex flex-col items-center">
-                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            Đã thanh toán trước (Online)
+                          <span className="text-[11px] font-semibold text-indigo-700">
+                            Đã thanh toán (Online)
                           </span>
 
                         </div>
                       ) : (
-                        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="text-[11px] font-semibold text-emerald-700">
                           Đã thu tại quầy
                         </span>
                       )
                     ) : (
-                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span className="text-[11px] font-semibold text-amber-700">
                         {row.isTelehealth || row.bookingMethod?.code === 'ONLINE_CONSULTATION' ? 'Chưa xác nhận thanh toán' : 'Chưa thu phí'}
                       </span>
                     )}
                   </td>
 
                   <td className="py-3 px-4 text-center whitespace-nowrap">
-                    <span className={`inline-flex px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                    <span className={`text-[11px] font-semibold ${
                       meta.tone === 'completed'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'text-emerald-700'
                         : meta.tone === 'booked'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        ? 'text-blue-700'
                         : meta.tone === 'cancelled'
-                        ? 'bg-slate-100 text-slate-600 border border-slate-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        ? 'text-slate-600'
+                        : 'text-amber-700'
                     }`}>
                       {meta.label}
                     </span>

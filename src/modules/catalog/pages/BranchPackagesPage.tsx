@@ -7,6 +7,7 @@ import { usePermission } from '@/common/hooks/usePermission'
 import { AppPermission } from '@/common/constants/permissions.constant'
 import { money, ReceptionDay, formatReceptionSchedule } from '../types/catalog.types'
 import PackageBranchSchedulesField from '../components/PackageBranchSchedulesField'
+import PackageReceptionSlotsPanel from '../components/PackageReceptionSlotsPanel'
 
 export default function BranchPackagesPage() {
   const { hasPermission } = usePermission()
@@ -22,25 +23,23 @@ export default function BranchPackagesPage() {
   const [editing, setEditing] = useState<any>(null)
   const [scheduleDays, setScheduleDays] = useState<ReceptionDay[]>([])
   const [scheduleError, setScheduleError] = useState('')
-  const [selectedMethodIds, setSelectedMethodIds] = useState<string[]>([])
+  const [isDeployed, setIsDeployed] = useState(false)
 
   useEffect(() => {
     let active = true
     Promise.all([listCatalog('service-packages'), listCatalog('branches'), listCatalog('booking-methods')])
       .then(([p, b, m]) => {
         if (!active) return
-        setPackages(p); setBranches(b); setMethods(m); setBranchId(b[0]?.id || '')
+        setPackages(p); setBranches(b); setMethods(m); setBranchId(String(b[0]?.id || ''))
       })
       .catch(() => { if (active) setError('Không tải được danh sách gói khám tại chi nhánh.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [])
 
-  const branchMethods = methods.filter((m) => m.branchId === branchId && ['SPECIALTY_EXAM', 'AFTER_HOURS', 'HEALTH_PACKAGE'].includes(m.code))
-  const deployedIds = (pkg: any): string[] => [...new Set<string>([
-    ...(pkg.branchBookingMethods || []).filter((l: any) => l.branchBookingMethod?.branchId === branchId).map((l: any) => l.branchBookingMethodId),
-    ...(pkg.branchBookingMethod?.branchId === branchId ? [pkg.branchBookingMethodId] : []),
-  ])]
+  const branchMethods = methods.filter((m) => String(m.branchId) === String(branchId) && ['SPECIALTY_EXAM', 'AFTER_HOURS', 'HEALTH_PACKAGE'].includes(m.code))
+  const deployedIds = (pkg: any): string[] => (pkg.branches || []).some((link: any) => String(link.branchId) === String(branchId))
+    ? branchMethods.filter(method => String(method.bookingMethodId) === String(pkg.bookingMethodId)).map(method => method.id) : []
 
   const saveSchedule = async () => {
     if (!editing || !canUpdate || saving) return
@@ -48,8 +47,8 @@ export default function BranchPackagesPage() {
     try {
       await updateCatalog('branch-packages', editing.id, {
         branchId,
-        branchBookingMethodIds: selectedMethodIds,
-        schedules: selectedMethodIds.length ? scheduleDays.map(({ dayOfWeek, sessions }) => ({ dayOfWeek, sessions })) : [],
+        isDeployed,
+        schedules: isDeployed ? scheduleDays.map(({ dayOfWeek, sessions }) => ({ dayOfWeek, sessions })) : [],
       })
       setPackages(await listCatalog('service-packages'))
       setEditing(null)
@@ -61,6 +60,7 @@ export default function BranchPackagesPage() {
   const filtered = packages.filter((p) => `${p.name} ${p.code}`.toLowerCase().includes(q.trim().toLowerCase()))
 
   return <div>
+    <PackageReceptionSlotsPanel packages={packages.filter(pkg => deployedIds(pkg).some(id => methods.some(method => method.id === id && method.code === 'HEALTH_PACKAGE')))} />
     <h1 className="text-2xl font-bold text-slate-950">Gói khám tại chi nhánh</h1>
     <p className="mt-2 text-sm text-slate-500">Quản lý ngày và buổi tiếp nhận từng gói tại chi nhánh. Nội dung và giá gói do quản lý chuỗi thiết lập dùng chung.</p>
     {error && <div role="alert" className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
@@ -84,13 +84,13 @@ export default function BranchPackagesPage() {
                   {branchMethods.filter((method) => deployedIds(pkg).includes(method.id)).map((method) => <span key={method.id} className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">{method.displayName}{(!method.isEnabled || !method.bookingMethodIsActive) && ' (đã ngừng hoạt động)'}</span>)}
                   {!deployedIds(pkg).length && <span className="text-xs text-slate-500">Chưa áp dụng tại chi nhánh</span>}
                 </div>
-                <p className="text-xs text-slate-500">{formatReceptionSchedule((pkg.receptionSchedules || []).filter((day: ReceptionDay) => day.branchId === branchId))}</p>
+                <p className="text-xs text-slate-500">{formatReceptionSchedule((pkg.receptionSchedules || []).filter((day: ReceptionDay) => String(day.branchId) === String(branchId)))}</p>
               </div>
               <button type="button" disabled={!canUpdate || saving !== null || !branchId || (!pkg.isActive && !deployedIds(pkg).length)}
                 onClick={() => {
                   setEditing(pkg)
-                  setSelectedMethodIds(deployedIds(pkg))
-                  setScheduleDays((pkg.receptionSchedules || []).filter((day: ReceptionDay) => day.branchId === branchId).map((day: ReceptionDay) => ({ branchId, dayOfWeek: day.dayOfWeek, sessions: [...day.sessions] })))
+                  setIsDeployed((pkg.branches || []).some((link: any) => String(link.branchId) === String(branchId)))
+                  setScheduleDays((pkg.receptionSchedules || []).filter((day: ReceptionDay) => String(day.branchId) === String(branchId)).map((day: ReceptionDay) => ({ branchId, dayOfWeek: day.dayOfWeek, sessions: [...day.sessions] })))
                   setScheduleError('')
                 }}
                 className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-40">Thiết lập lịch</button>
@@ -103,17 +103,20 @@ export default function BranchPackagesPage() {
     </div>
     {editing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs" onClick={() => { if (!saving) setEditing(null) }}>
       <section role="dialog" aria-modal="true" aria-labelledby="reception-title" className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5" onClick={(event) => event.stopPropagation()}>
-        <div className="mb-4 flex items-center justify-between gap-3"><h2 id="reception-title" className="font-bold text-slate-900">{editing.name} · {branches.find((branch) => branch.id === branchId)?.name}</h2>
+        <div className="mb-4 flex items-center justify-between gap-3"><h2 id="reception-title" className="font-bold text-slate-900">{editing.name} · {branches.find((branch) => String(branch.id) === String(branchId))?.name}</h2>
           <button aria-label="Đóng" disabled={!!saving} onClick={() => setEditing(null)}><X className="h-5 w-5" /></button></div>
         {scheduleError && <p role="alert" className="mb-3 text-sm text-rose-700">{scheduleError}</p>}
+        <p className="mb-3 text-sm text-slate-700">Hình thức đặt khám: <strong>{editing.bookingMethod?.name}</strong></p>
+        <label className="mb-4 flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" checked={isDeployed} disabled={!!saving} onChange={event => setIsDeployed(event.target.checked)} className="accent-emerald-700" />
+          Triển khai gói tại chi nhánh
+        </label>
         <PackageBranchSchedulesField
-          branches={branches.filter((branch) => branch.id === branchId)}
-          methods={branchMethods.map((method) => ({ ...method, isEnabled: editing.isActive && method.isEnabled }))}
-          methodIds={selectedMethodIds}
-          onMethodsChange={setSelectedMethodIds}
+          branches={branches.filter((branch) => String(branch.id) === String(branchId))}
+          methodCode={editing.bookingMethod?.code}
           value={scheduleDays}
           onChange={setScheduleDays}
-          disabled={!!saving}
+          disabled={!!saving || !isDeployed}
         />
         <div className="mt-4 flex justify-end gap-2">
           <button disabled={!!saving} onClick={() => setEditing(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm">Hủy</button>

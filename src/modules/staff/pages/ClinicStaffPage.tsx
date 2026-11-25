@@ -74,15 +74,28 @@ const EMPTY = {
 const TABLE_COLUMNS = [
   'Nhân viên',
   'Chi nhánh',
-  'Chuyên khoa',
   { label: 'Vai trò', width: 'whitespace-nowrap' },
   { label: 'Trạng thái', width: 'whitespace-nowrap' },
   { label: 'Thao tác', align: 'right' as const, width: 'whitespace-nowrap' },
 ]
 
+function formatAccountDate(value?: string | null, includeTime = false) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit' } as const : {}),
+  }).format(date)
+}
+
 export default function ClinicStaffPage() {
   const navigate = useNavigate()
   const { role: currentRole } = useAuth()
+  const isAccountManagement = currentRole === 'admin'
+  const tableColumns = isAccountManagement
+    ? [...TABLE_COLUMNS.slice(0, 2), 'Đăng nhập gần nhất', ...TABLE_COLUMNS.slice(2)]
+    : TABLE_COLUMNS
   const { hasPermission } = usePermission()
   const canCreateUsers = hasPermission(AppPermission.USER_CREATE)
   const canUpdateUsers = hasPermission(AppPermission.USER_UPDATE)
@@ -134,7 +147,7 @@ export default function ClinicStaffPage() {
       const roleMatch = filter === 'all' || String(r.role || r.userType).toLowerCase() === filter
       if (!roleMatch) return false
       if (!q) return true
-      const b = r.branchAssignments?.[0]?.branch?.name || r.branchName || ''
+      const b = r.branch?.name || r.branchName || ''
       const spec = (r.doctor?.specialties || []).map((s: any) => s.specialty?.name).join(' ')
       return [r.fullName, r.email, r.phoneNumber, b, spec].join(' ').toLowerCase().includes(q)
     })
@@ -156,10 +169,7 @@ export default function ClinicStaffPage() {
   const openEdit = (row: any) => {
     setSelected(row)
     const doc = row.doctor || {}
-    const assignedBranchIds = (row.branchAssignments || []).map((b: any) => b.branchId || b.branch?.id).filter(Boolean)
-    const primaryObj = (row.branchAssignments || []).find((b: any) => b.isPrimary)
-    const primaryId = primaryObj?.branchId || primaryObj?.branch?.id || assignedBranchIds[0] || row.branchId || branches[0]?.id || ''
-    const finalBranchIds = assignedBranchIds.length > 0 ? assignedBranchIds : (primaryId ? [primaryId] : [])
+    const primaryId = row.branchId || row.branch?.id || branches[0]?.id || ''
 
     setForm({
       fullName: row.fullName || '',
@@ -174,7 +184,7 @@ export default function ClinicStaffPage() {
       experienceYears: doc.experienceYears != null ? String(doc.experienceYears) : '',
       biography: doc.biography || '',
       branchId: primaryId,
-      branchIds: finalBranchIds,
+      branchIds: primaryId ? [primaryId] : [],
       primaryBranchId: primaryId,
       specialtyIds: (doc.specialties || []).map((s: any) => String(s.specialtyId ?? s.specialty?.id)),
       primarySpecialtyId: String((doc.specialties || []).find((s: any) => s.isPrimary)?.specialtyId ?? (doc.specialties || []).find((s: any) => s.isPrimary)?.specialty?.id ?? doc.specialties?.[0]?.specialtyId ?? doc.specialties?.[0]?.specialty?.id ?? ''),
@@ -189,27 +199,7 @@ export default function ClinicStaffPage() {
   }
 
   const toggleBranch = (bId: string) => {
-    if (form.role === 'doctor') {
-      setForm((prev: any) => ({ ...prev, branchIds: [bId], primaryBranchId: bId, branchId: bId }))
-      return
-    }
-    const current: string[] = form.branchIds || []
-    let next: string[] = []
-    if (current.includes(bId)) {
-      next = current.filter((id: string) => id !== bId)
-    } else {
-      next = [...current, bId]
-    }
-    let nextPrimary = form.primaryBranchId
-    if (!next.includes(nextPrimary)) {
-      nextPrimary = next[0] || ''
-    }
-    setForm((prev: any) => ({
-      ...prev,
-      branchIds: next,
-      primaryBranchId: nextPrimary,
-      branchId: nextPrimary,
-    }))
+    setForm((prev: any) => ({ ...prev, branchIds: [bId], primaryBranchId: bId, branchId: bId }))
   }
 
   const toggleSpecialty = (id: string) => {
@@ -226,9 +216,8 @@ export default function ClinicStaffPage() {
     if (!form.fullName.trim() || !form.email.trim()) return setError('Vui lòng nhập họ tên và email.')
     if (modal === 'create' && form.password.length < 6)
       return setError('Mật khẩu phải có ít nhất 6 ký tự.')
-    if (!['admin', 'chain_manager'].includes(form.role) && (!form.branchIds || form.branchIds.length === 0))
-      return setError('Vui lòng chọn ít nhất một cơ sở làm việc / quản lý.')
-    if (form.role === 'doctor' && form.branchIds.length !== 1) return setError('Mỗi bác sĩ phải làm việc tại đúng một chi nhánh.')
+    if (!['admin', 'chain_manager'].includes(form.role) && !form.branchId)
+      return setError('Vui lòng chọn chi nhánh làm việc.')
     if (form.role === 'doctor') {
       if (!form.academicRank || !form.licenseNumber.trim()) return setError('Vui lòng nhập học hàm / học vị và số CCHN.')
       if (!form.specialtyIds.length || !form.specialtyIds.includes(form.primarySpecialtyId)) return setError('Vui lòng chọn chuyên khoa và một chuyên khoa chính.')
@@ -241,7 +230,7 @@ export default function ClinicStaffPage() {
     setSaving(true)
     setError('')
     try {
-      const primaryId = form.primaryBranchId || form.branchIds[0] || form.branchId
+      const primaryId = form.branchId
       const payload: any = {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
@@ -251,8 +240,6 @@ export default function ClinicStaffPage() {
         ...(form.phoneNumber ? { phoneNumber: form.phoneNumber.trim() } : {}),
         ...(form.password ? { password: form.password } : {}),
         branchId: ['admin', 'chain_manager'].includes(form.role) ? undefined : primaryId,
-        branchIds: ['admin', 'chain_manager'].includes(form.role) ? [] : form.branchIds,
-        primaryBranchId: ['admin', 'chain_manager'].includes(form.role) ? undefined : primaryId,
       }
       if (form.role === 'doctor') {
         payload.academicRank = form.academicRank.trim()
@@ -321,8 +308,8 @@ export default function ClinicStaffPage() {
     <>
       <AdminPageHeader
         eyebrow="Quản lý người dùng"
-        title="Nhân sự phòng khám"
-        description="Quản lý tài khoản, ảnh đại diện, chi nhánh và chuyên khoa của nhân sự."
+        title={isAccountManagement ? 'Tài khoản nhân viên' : 'Nhân sự phòng khám'}
+        description={isAccountManagement ? 'Quản lý tài khoản đăng nhập, vai trò, chi nhánh và trạng thái truy cập của nhân viên.' : 'Quản lý tài khoản, ảnh đại diện, chi nhánh và chuyên khoa của nhân sự.'}
       >
         {currentRole !== 'admin' && <AdminButton
           variant="secondary"
@@ -345,7 +332,7 @@ export default function ClinicStaffPage() {
           icon={Plus}
           onClick={openCreate}
         >
-          Thêm nhân sự
+          {isAccountManagement ? 'Thêm tài khoản' : 'Thêm nhân sự'}
         </AdminButton>}
       </AdminPageHeader>
 
@@ -380,17 +367,16 @@ export default function ClinicStaffPage() {
         </div>
 
         <AdminTable minWidth="min-w-[750px]">
-          <AdminTableHead columns={TABLE_COLUMNS} />
+          <AdminTableHead columns={tableColumns} />
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <AdminTableLoading colSpan={6} message="Đang tải dữ liệu nhân sự…" />
+              <AdminTableLoading colSpan={tableColumns.length} message="Đang tải dữ liệu nhân sự…" />
             ) : filtered.length === 0 ? (
-              <AdminTableEmpty colSpan={6} message="Không có nhân sự phù hợp." />
+              <AdminTableEmpty colSpan={tableColumns.length} message="Không có nhân sự phù hợp." />
             ) : (
               filtered.map((row) => {
                 const bName =
                   (['chain_manager', 'admin'].includes(String(row.role).toLowerCase()) ? 'Toàn hệ thống' : row.branchAssignments?.[0]?.branch?.name || row.branchName || 'Chưa phân công')
-                const specName = [...(row.doctor?.specialties || [])].sort((a: any, b: any) => Number(b.isPrimary) - Number(a.isPrimary)).map((s: any) => s.specialty?.name).filter(Boolean).join(', ') || '—'
                 const avatar = row.avatarUrl || row.doctor?.avatarUrl
                 const roleKey = String(row.role || row.userType).toLowerCase()
                 return (
@@ -420,34 +406,28 @@ export default function ClinicStaffPage() {
                     </td>
                     <td className="px-5 py-3.5 text-xs text-slate-700 whitespace-nowrap">
                       {(() => {
-                        const bList = (row.branchAssignments || [])
-                          .map((b: any) => b.branch?.name)
-                          .filter(Boolean)
+                        const bList = row.branch?.name ? [row.branch.name] : []
                         if (bList.length === 0) {
                           return <span className="text-slate-400">{row.branchName || '—'}</span>
                         }
                         if (bList.length === 1) {
                           return <span className="font-semibold text-slate-800">{bList[0]}</span>
                         }
-                        return (
-                          <div className="flex items-center gap-1.5" title={bList.join(', ')}>
-                            <span className="font-semibold text-slate-800">{bList[0]}</span>
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              +{bList.length - 1} cơ sở
-                            </span>
-                          </div>
-                        )
+                        return <span className="font-semibold text-slate-800">{bList[0]}</span>
                       })()}
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-emerald-800 font-medium whitespace-nowrap">{specName}</td>
+                    {isAccountManagement && <td className="px-5 py-3.5 text-xs whitespace-nowrap">
+                        <p className={row.lastLoginAt ? 'font-medium text-slate-800' : 'text-slate-400'}>{row.lastLoginAt ? formatAccountDate(row.lastLoginAt, true) : 'Chưa ghi nhận'}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">Ngày tạo: {formatAccountDate(row.createdAt)}</p>
+                    </td>}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200 whitespace-nowrap">
                         {ROLE_LABEL[roleKey] || row.role}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <StatusBadge status={row.isBlocked ? 'blocked' : 'active'}>
-                        {row.isBlocked ? 'Đã khóa' : 'Hoạt động'}
+                      <StatusBadge status={row.isBlocked ? 'blocked' : String(row.status).toLowerCase() === 'inactive' ? 'inactive' : 'active'}>
+                        {row.isBlocked ? 'Đã khóa' : String(row.status).toLowerCase() === 'inactive' ? 'Ngừng hoạt động' : 'Hoạt động'}
                       </StatusBadge>
                     </td>
                     <td className="px-5 py-3.5 text-right whitespace-nowrap">
@@ -551,7 +531,7 @@ export default function ClinicStaffPage() {
               label="Vai trò hệ thống"
               disabled={modal === 'edit' && !canManageRoles}
               value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value, ...(e.target.value === 'doctor' ? { branchIds: form.primaryBranchId ? [form.primaryBranchId] : [] } : {}) })}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
               options={canManageRoles || modal === 'edit' ? ROLES.slice(1) : ROLES.slice(1).filter(([id]) => ['doctor', 'receptionist'].includes(id))}
             />
             <AdminInput
@@ -566,7 +546,7 @@ export default function ClinicStaffPage() {
             />
           </div>
 
-          {/* Bác sĩ làm việc tại một chi nhánh; các vai trò khác giữ phạm vi phân công. */}
+          {/* Mỗi nhân sự vận hành chỉ làm việc tại một chi nhánh; tài khoản hệ thống không cần gán chi nhánh. */}
           {['admin', 'chain_manager'].includes(form.role) ? <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Vai trò này có phạm vi toàn hệ thống, không cần gán từng chi nhánh.</p> : form.role === 'doctor' ? (
             <fieldset className="space-y-2">
               <legend className="text-xs font-bold text-slate-800">
@@ -604,14 +584,13 @@ export default function ClinicStaffPage() {
                 <span className="text-rose-500">*</span>
               </label>
               <span className="text-[11px] text-slate-500">
-                Đã chọn: <strong className="text-emerald-700">{form.branchIds?.length || 0}</strong> cơ sở
+                Chọn một chi nhánh
               </span>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
               {branches.map((b) => {
                 const isChecked = form.branchIds?.includes(b.id)
-                const isPrimary = form.primaryBranchId === b.id
 
                 return (
                   <div
@@ -628,8 +607,8 @@ export default function ClinicStaffPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <input
-                        type={form.role === 'doctor' ? 'radio' : 'checkbox'}
-                        name={form.role === 'doctor' ? 'doctor-branch' : undefined}
+                        type="radio"
+                        name="staff-branch"
                         checked={isChecked}
                         onChange={() => toggleBranch(b.id)}
                         className="w-4 h-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 cursor-pointer"
@@ -639,33 +618,11 @@ export default function ClinicStaffPage() {
                       </span>
                     </label>
 
-                    {isChecked && form.role !== 'doctor' && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setForm((prev: any) => ({ ...prev, primaryBranchId: b.id, branchId: b.id }))
-                        }}
-                        title={isPrimary ? 'Cơ sở chính hiện tại' : 'Đặt cơ sở này làm cơ sở chính'}
-                        className={`text-[10px] px-2 py-0.5 rounded font-semibold border transition-all cursor-pointer shrink-0 ${
-                          isPrimary
-                            ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-500 hover:text-emerald-700'
-                        }`}
-                      >
-                        {isPrimary ? '★ Cơ sở chính' : 'Đặt làm chính'}
-                      </button>
-                    )}
                   </div>
                 )
               })}
             </div>
-            {form.role === 'doctor' && <p className="text-xs text-slate-500">Mỗi bác sĩ chỉ làm việc và nhận lịch khám tại một chi nhánh.</p>}
-            {form.role !== 'doctor' && form.branchIds?.length > 1 && (
-              <p className="text-[11px] text-slate-500 italic mt-1">
-                * Bấm nút <strong>&quot;Đặt làm chính&quot;</strong> để chọn cơ sở mặc định ưu tiên phân ca và đón tiếp.
-              </p>
-            )}
+            <p className="text-xs text-slate-500">Mỗi tài khoản chỉ làm việc tại một chi nhánh tại một thời điểm.</p>
           </div>
 
           )}

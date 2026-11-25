@@ -10,7 +10,7 @@ interface ImageUploaderProps {
   onChange: (url: string) => void
   label?: string
   placeholder?: string
-  aspectRatio?: 'square' | 'wide' | 'avatar' | 'icon'
+  aspectRatio?: 'square' | 'wide' | 'avatar' | 'icon' | 'logo'
   className?: string
   disabled?: boolean
 }
@@ -76,7 +76,7 @@ export default function ImageUploader({
       {fullUrl ? (
         <div
           className={`relative overflow-hidden rounded border border-slate-200 bg-slate-50 group ${
-            aspectRatio === 'icon'
+            aspectRatio === 'logo' ? 'h-20 w-20 shrink-0' : aspectRatio === 'icon'
               ? 'h-[30px] w-[30px] shrink-0'
               : aspectRatio === 'avatar'
               ? 'h-20 w-20'
@@ -119,10 +119,15 @@ export default function ImageUploader({
       ) : (
         <div
           onDrop={handleDrop}
+          role={aspectRatio === 'logo' ? 'button' : undefined}
+          tabIndex={aspectRatio === 'logo' && !disabled && !uploading ? 0 : undefined}
+          aria-label={aspectRatio === 'logo' ? 'Tải logo chi nhánh' : undefined}
+          aria-disabled={disabled || uploading}
+          onKeyDown={e => { if (aspectRatio === 'logo' && !disabled && !uploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); inputRef.current?.click() } }}
           onDragOver={handleDragOver}
           onClick={() => !disabled && !uploading && inputRef.current?.click()}
           className={`relative border-2 border-dashed border-slate-200 hover:border-emerald-500 bg-slate-50/50 hover:bg-emerald-50/20 rounded transition flex flex-col items-center justify-center p-1.5 cursor-pointer text-center ${
-            aspectRatio === 'icon'
+            aspectRatio === 'logo' ? 'h-20 w-20 shrink-0' : aspectRatio === 'icon'
               ? 'h-[30px] w-[30px] shrink-0'
               : aspectRatio === 'avatar'
               ? 'h-20 w-20'
@@ -137,6 +142,8 @@ export default function ImageUploader({
               <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
               {aspectRatio !== 'icon' && <span className="text-[10px] text-slate-500">Đang tải…</span>}
             </div>
+          ) : aspectRatio === 'logo' ? (
+            <div className="flex flex-col items-center gap-1 text-slate-600"><ImageIcon className="h-6 w-6" /><span className="text-sm">Logo</span></div>
           ) : aspectRatio === 'icon' ? (
             <div className="flex flex-col items-center justify-center text-slate-400 hover:text-emerald-700">
               <span className="text-sm font-bold leading-none text-slate-400">+</span>

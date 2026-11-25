@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@/common/hooks/useNextNavigation'
 import { useAuth } from '@/common/hooks/useAuth'
+import { useStaffLogout } from '@/common/hooks/useStaffLogout'
 import { listPatientHistoryReception, listPatientsReception } from '@/modules/admin/services/appointments'
 import { formatDateVi, genderLabelVi, patientDobValue, patientListDisplayName, receptionStatusMeta, toRegistrationPatient } from '../components/receptionHelpers'
 import RoleSidebar, { StaffMobileHeader } from '@/modules/portal/components/RoleSidebar'
@@ -32,7 +33,8 @@ const TABLE_COLUMNS = [
 
 export default function ReceptionPatientsPage() {
   const navigate = useNavigate()
-  const { user, token, performLogout } = useAuth()
+  const { user, token } = useAuth()
+  const { performLogout } = useStaffLogout()
 
   const [rows, setRows] = useState<any[]>([])
   const [page, setPage] = useState(1)
@@ -328,7 +330,7 @@ export default function ReceptionPatientsPage() {
               ) : (
                 paginatedRows.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-5 py-3 font-mono font-bold text-emerald-700 text-xs">
+                    <td className="px-5 py-3 font-mono font-bold text-slate-900 text-xs">
                       {row.patientCode || row.nationalId || '—'}
                     </td>
                     <td className="px-5 py-3">

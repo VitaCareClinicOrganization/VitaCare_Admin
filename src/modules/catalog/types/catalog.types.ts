@@ -25,12 +25,9 @@ export const CONFIG: Record<string, Config> = {
       ['description', 'Mô tả / Giới thiệu thế mạnh chi nhánh', 'textarea'],
     ],
     columns: [
-      ['code', 'Mã'],
       ['name', 'Tên chi nhánh'],
-      ['province', 'Khu vực'],
+      ['managerNames', 'Người quản lý'],
       ['phoneNumber', 'Hotline'],
-      ['operatingHours', 'Giờ hoạt động'],
-      ['address', 'Địa chỉ'],
     ],
   },
   rooms: {
@@ -111,7 +108,7 @@ export const CONFIG: Record<string, Config> = {
       ['code', 'Mã'],
       ['name', 'Gói dịch vụ'],
       ['specialty.name', 'Chuyên khoa'],
-      ['branchBookingMethod.branch.name', 'Chi nhánh'],
+      ['branches', 'Chi nhánh'],
       ['receptionSchedules', 'Lịch tiếp nhận'],
       ['price', 'Giá gói'],
     ],
@@ -178,7 +175,7 @@ export const formatPackageReception = (pkg: any) => {
   const schedules: ReceptionDay[] = pkg.receptionSchedules || []
   const branchIds = [...new Set(schedules.map((day) => day.branchId))]
   if (!branchIds.length) return 'Chưa mở lịch tiếp nhận'
-  const links = [pkg.branchBookingMethod, ...(pkg.branchBookingMethods || []).map((link: any) => link.branchBookingMethod)].filter(Boolean)
+  const links = pkg.branches || []
   return branchIds.map((branchId) => {
     const branchName = links.find((link: any) => link.branchId === branchId)?.branch?.name || 'Chi nhánh'
     return `${branchName}: ${formatReceptionSchedule(schedules.filter((day) => day.branchId === branchId))}`

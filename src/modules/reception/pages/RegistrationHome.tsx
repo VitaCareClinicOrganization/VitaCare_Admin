@@ -26,6 +26,7 @@ import {
   QrCode,
   Search,
   ChevronLeftIcon,
+  Calendar,
 } from 'lucide-react'
 
 
@@ -123,6 +124,8 @@ export default function RegistrationHome() {
   const [qrScanErr, setQrScanErr] = useState('')
   const [qrImageLoading, setQrImageLoading] = useState(false)
   const searchContainerRef = useRef<HTMLDivElement>(null)
+  const datePickerRef = useRef<HTMLInputElement>(null)
+  const servicesCacheRef = useRef<Record<string, any[]>>({})
 
   const effectiveDraftPatientCode = useMemo(() => {
     return String(draftPatientCode || '').trim()
@@ -330,12 +333,20 @@ export default function RegistrationHome() {
       setServicesLoading(false)
       return
     }
+    const cached = servicesCacheRef.current[specialtyId]
+    if (cached) {
+      setServicePackages(cached)
+      setServicePackageId(current => cached.some(pkg => String(pkg.id) === current) ? current : '')
+      setServicesLoading(false)
+      return
+    }
     let mounted = true
     setServicesLoading(true)
     listSpecialtyServices(specialtyId)
       .then((rows) => {
         if (!mounted) return
         const services = (Array.isArray(rows) ? rows : []).filter(pkg => pkg.bookingMethod?.code === 'SPECIALTY_EXAM' && Number(pkg.specialtyId) === Number(specialtyId))
+        servicesCacheRef.current[specialtyId] = services
         setServicePackages(services)
         setServicePackageId(current => services.some(pkg => String(pkg.id) === current) ? current : '')
       })
@@ -1413,33 +1424,100 @@ export default function RegistrationHome() {
               <div>
                 <label className="block font-bold mb-2">2. Dịch vụ chuyên khoa <span className="text-rose-600">*</span></label>
                 {fromAppointment ? <p>{payload?.servicePackage?.name || 'Theo lịch hẹn đã đặt'}</p> : (
-                  <select className="w-full px-3 py-2 border rounded-lg disabled:bg-slate-100" value={servicePackageId} onChange={e => handleServiceChange(e.target.value)} disabled={servicesLoading || !specialtyId}>
-                    <option value="">{servicesLoading ? 'Đang tải dịch vụ…' : '-- Chọn dịch vụ --'}</option>
+                  <select className="w-full px-3 py-2 bg-white border rounded-lg disabled:bg-slate-100" value={servicePackageId} onChange={e => handleServiceChange(e.target.value)} disabled={servicesLoading || !specialtyId}>
+                    <option value="">-- Chọn dịch vụ --</option>
                     {servicePackages.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name} — {Number(pkg.price || 0).toLocaleString('vi-VN')} đ</option>)}
                   </select>
                 )}
-                {selectedService && <p className="mt-2 font-semibold text-emerald-700">Phí khám: {Number(selectedService.price || 0).toLocaleString('vi-VN')} đ</p>}
-                {!fromAppointment && specialtyId && !servicesLoading && !servicePackages.length && <p className="mt-2 text-amber-700">Chuyên khoa chưa có dịch vụ đang áp dụng.</p>}
+                <div className="min-h-[20px] mt-1.5">
+                  {selectedService ? (
+                    <p className="font-semibold text-emerald-700">Phí khám: {Number(selectedService.price || 0).toLocaleString('vi-VN')} đ</p>
+                  ) : !fromAppointment && specialtyId && !servicesLoading && !servicePackages.length ? (
+                    <p className="text-amber-700">Chuyên khoa chưa có dịch vụ đang áp dụng.</p>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}
           <div className="space-y-3">
             <label className="block text-xs font-bold">3. Ngày và khung giờ khám <span className="text-rose-600">*</span></label>
-            <input type="date" min={todayIso} value={appointmentDate} onChange={e => handleAppointmentDateChange(e.target.value)} disabled={fromAppointment || !servicePackageId} className="px-3 py-2 border rounded-lg disabled:bg-slate-100" />
-            {!fromAppointment && <div className="flex gap-2 overflow-x-auto pb-1">
-              {availableWorkDates.slice(0, 14).map(day => <button key={day} type="button" onClick={() => handleAppointmentDateChange(day)} className={`shrink-0 rounded-lg border px-3 py-2 text-xs ${appointmentDate === day ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700'}`}>{day === todayIso ? 'Hôm nay' : formatDayOfWeekVi(day)} · {formatDateVi(day)}</button>)}
-            </div>}
-            <div className="p-4 bg-slate-50 border rounded-xl space-y-3">
-              {fromAppointment ? <p className="text-xs">{formatDateVi(appointmentDate)} · {formatSlotRange(startTime)}</p>
-                : slotsLoading ? <p className="text-xs text-slate-500">Đang tải khung giờ…</p>
-                : slotsErr ? <p className="text-xs text-rose-700">{slotsErr}</p>
-                : !specialtyId || !servicePackageId ? <p className="text-xs text-slate-500">Chọn chuyên khoa và dịch vụ để xem khung giờ.</p>
-                : !freeSlots.length ? <p className="text-xs text-amber-700">Dịch vụ chưa có khung giờ còn trống trong ngày này. Vui lòng chọn ngày khác.</p>
-                : slotsBySession.filter(session => session.slots.length).map(session => <div key={session.code}>
-                    <p className="mb-2 text-xs font-semibold text-slate-500">Ca {session.label.toLowerCase()}</p>
-                    <div className="flex flex-wrap gap-2">{session.slots.map(time => <button key={time} type="button" onClick={() => handleTimeChange(time)} className={`rounded-lg border px-3 py-2 text-xs ${startTime === time ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700'}`}>{time} – {availableSlots.find(slot => slot.startTime === time)?.endTime}</button>)}</div>
-                  </div>)}
-            </div>
+            {!fromAppointment && (!specialtyId || !servicePackageId) ? (
+              <p className="text-xs text-slate-500">Chọn chuyên khoa và dịch vụ để xem ngày và khung giờ khám.</p>
+            ) : (
+              <>
+                {!fromAppointment && (() => {
+                  const quickDates = availableWorkDates.slice(0, 6)
+                  const visibleDates = appointmentDate && !quickDates.includes(appointmentDate)
+                    ? [...quickDates.slice(0, 5), appointmentDate].sort()
+                    : quickDates
+                  return (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {visibleDates.map(day => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => handleAppointmentDateChange(day)}
+                          className={`shrink-0 cursor-pointer rounded-lg border px-3 py-2 text-xs transition-colors ${appointmentDate === day ? 'bg-emerald-600 text-white border-emerald-600 font-semibold' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
+                        >
+                          {day === todayIso ? 'Hôm nay' : formatDayOfWeekVi(day)} · {formatDateVi(day)}
+                        </button>
+                      ))}
+                      <div className="relative">
+                        <input
+                          ref={datePickerRef}
+                          type="date"
+                          min={todayIso}
+                          value={appointmentDate}
+                          onChange={e => e.target.value && handleAppointmentDateChange(e.target.value)}
+                          tabIndex={-1}
+                          aria-hidden="true"
+                          className="sr-only"
+                        />
+                        <button
+                          type="button"
+                          title="Chọn ngày khác"
+                          aria-label="Chọn ngày khác"
+                          onClick={() => {
+                            const input = datePickerRef.current
+                            if (!input) return
+                            if (typeof input.showPicker === 'function') input.showPicker()
+                            else input.click()
+                          }}
+                          className="inline-flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
+                        >
+                          <Calendar className="h-4 w-4 text-slate-600" strokeWidth={2} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
+                <div className="min-h-[168px] p-4 bg-slate-50 border rounded-xl space-y-3 flex flex-col justify-center">
+                  {fromAppointment ? <p className="text-xs">{formatDateVi(appointmentDate)} · {formatSlotRange(startTime)}</p>
+                    : slotsLoading ? (
+                      <div className="space-y-3 animate-pulse" aria-label="Đang tải khung giờ">
+                        <div>
+                          <div className="mb-2 h-4 w-14 rounded bg-slate-200" />
+                          <div className="flex flex-wrap gap-2">
+                            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-[34px] w-[104px] rounded-lg bg-slate-200" />)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-2 h-4 w-14 rounded bg-slate-200" />
+                          <div className="flex flex-wrap gap-2">
+                            {Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-[34px] w-[104px] rounded-lg bg-slate-200" />)}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                    : slotsErr ? <p className="text-xs text-rose-700">{slotsErr}</p>
+                    : !freeSlots.length ? <p className="text-xs text-amber-700">Dịch vụ chưa có khung giờ còn trống trong ngày này. Vui lòng chọn ngày khác.</p>
+                    : slotsBySession.filter(session => session.slots.length).map(session => <div key={session.code}>
+                        <p className="mb-2 text-xs font-semibold text-slate-500">Ca {session.label.toLowerCase()}</p>
+                        <div className="flex flex-wrap gap-2">{session.slots.map(time => <button key={time} type="button" onClick={() => handleTimeChange(time)} className={`cursor-pointer rounded-lg border px-3 py-2 text-xs transition-colors ${startTime === time ? 'bg-emerald-600 text-white border-emerald-600 font-semibold' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}>{time} – {availableSlots.find(slot => slot.startTime === time)?.endTime}</button>)}</div>
+                      </div>)}
+                </div>
+              </>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold mb-2">4. Bác sĩ phụ trách <span className="text-rose-600">*</span></label>

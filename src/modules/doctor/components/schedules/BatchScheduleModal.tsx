@@ -245,14 +245,14 @@ export default function BatchScheduleModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="flex items-center gap-2 rounded border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
+          <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
             <span>{error}</span>
           </div>
         )}
 
         {resultMsg && (
-          <div className="flex items-center gap-2 rounded border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800">
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800">
             <Check className="h-4 w-4 shrink-0 text-emerald-600" />
             <span className="font-semibold">{resultMsg}</span>
           </div>
@@ -318,7 +318,7 @@ export default function BatchScheduleModal({
                 const active = selectedDays.length === preset.days.length && preset.days.every((day) => selectedDays.includes(day))
                 return <button key={preset.id} type="button" aria-pressed={active}
                   onClick={() => setSelectedDays(preset.days)}
-                  className={`rounded px-2.5 py-1.5 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${active ? 'bg-emerald-50 font-semibold text-emerald-800' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}>
+                  className={`rounded-xl px-2.5 py-1.5 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${active ? 'bg-emerald-50 font-semibold text-emerald-800' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}>
                   {preset.label}
                 </button>
               })}
@@ -328,7 +328,7 @@ export default function BatchScheduleModal({
             {DAYS_OF_WEEK.map((day) => {
               const selected = selectedDays.includes(day.id)
               return <button key={day.id} type="button" aria-label={day.label} aria-pressed={selected} onClick={() => toggleDay(day.id)}
-                className={`flex h-10 items-center justify-center gap-1 rounded text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${selected ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                className={`flex h-10 items-center justify-center gap-1 rounded-xl text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${selected ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
                 <span className="sm:hidden">{day.short}</span><span className="hidden sm:inline">{day.label}</span>
               </button>
             })}
@@ -345,7 +345,7 @@ export default function BatchScheduleModal({
               {SHIFT_OPTIONS.map((shift) => {
                 const selected = selectedShiftIds.includes(shift.id)
                 return <button key={shift.id} type="button" aria-pressed={selected} onClick={() => toggleShift(shift.id)}
-                  className={`relative rounded px-2 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 sm:px-3 ${selected ? 'bg-emerald-50 text-emerald-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                  className={`relative rounded-xl px-2 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 sm:px-3 ${selected ? 'bg-emerald-50 text-emerald-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                   <span className="block text-xs font-semibold">{shift.label}</span>
                   <span className={`mt-1 block whitespace-nowrap text-[10px] sm:text-xs ${selected ? 'text-emerald-700' : 'text-slate-500'}`}>{shift.start}–{shift.end}</span>
                 </button>
@@ -355,14 +355,14 @@ export default function BatchScheduleModal({
           <div className="space-y-3">
             <label htmlFor="batch-slot-duration" className="block text-sm font-semibold text-slate-800">Thời lượng khám</label>
             <select id="batch-slot-duration" value={slotDurationMin} onChange={(event) => setSlotDurationMin(Number(event.target.value) || 30)}
-              className="h-[64px] w-full rounded bg-slate-100 px-3 text-sm text-slate-700 focus:outline focus:outline-2 focus:outline-emerald-600">
+              className="h-[64px] w-full rounded-xl bg-slate-100 px-3 text-sm text-slate-700 focus:outline focus:outline-2 focus:outline-emerald-600">
               {[15, 20, 30, 45, 60].map((minutes) => <option key={minutes} value={minutes}>{minutes} phút / lượt</option>)}
             </select>
           </div>
         </fieldset>
 
         {/* Date Range & Quick Presets */}
-        <div className="rounded border border-slate-200 bg-white p-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-3">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-slate-500" />
@@ -372,21 +372,21 @@ export default function BatchScheduleModal({
               <button
                 type="button"
                 onClick={() => setRangePreset(0)}
-                className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
               >
                 Chỉ 1 ngày
               </button>
               <button
                 type="button"
                 onClick={() => setRangePreset(2)}
-                className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
               >
                 +2 Tuần
               </button>
               <button
                 type="button"
                 onClick={() => setRangePreset(4)}
-                className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-white cursor-pointer"
               >
                 +4 Tuần (1 Tháng)
               </button>
@@ -411,7 +411,7 @@ export default function BatchScheduleModal({
           </div>
 
           {/* Realtime Summary Preview */}
-          <div className="mt-3 flex items-center justify-between rounded bg-slate-50 px-3.5 py-2 text-xs text-slate-700 border border-slate-200">
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs text-slate-700 border border-slate-200">
             <span className="flex items-center gap-1.5 font-medium">
               <Layers className="h-3.5 w-3.5 text-emerald-700" />
               Dự kiến sinh:{' '}
@@ -420,7 +420,7 @@ export default function BatchScheduleModal({
                 ({selectedShifts.length} ca/ngày × {estimatedDays} ngày)
               </span>
             </span>
-            <span className="font-bold text-emerald-800 bg-white px-2.5 py-1 rounded border border-slate-200 text-xs shadow-2xs">
+            <span className="font-bold text-emerald-800 bg-white px-2.5 py-1 rounded-xl border border-slate-200 text-xs shadow-2xs">
               {totalEstimatedSlots} tổng slot khám
             </span>
           </div>

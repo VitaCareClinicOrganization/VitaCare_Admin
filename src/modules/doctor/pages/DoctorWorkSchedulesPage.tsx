@@ -61,14 +61,13 @@ export default function DoctorWorkSchedulesPage({
   const assignedBranch = useMemo(() => {
     const user = session?.user
     return (
-      user?.branchAssignments?.find((b: any) => b.isPrimary)?.branch ||
-      user?.branchAssignments?.[0]?.branch ||
+      user?.branch ||
       null
     )
   }, [session?.user])
 
   const assignedBranchId = useMemo(() => {
-    return assignedBranch?.id || session?.user?.branchAssignments?.[0]?.branchId || ''
+    return assignedBranch?.id || session?.user?.branchId || session?.user?.branch?.id || ''
   }, [assignedBranch, session?.user])
 
   const defaultBranchId = isBranchManager
@@ -535,7 +534,7 @@ export default function DoctorWorkSchedulesPage({
       )}
 
       {error && (
-        <div className="mt-4 flex items-center justify-between rounded border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
             <span>{error}</span>

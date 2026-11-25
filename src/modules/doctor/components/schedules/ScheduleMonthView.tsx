@@ -61,7 +61,7 @@ export default function ScheduleMonthView({
 }: ScheduleMonthViewProps) {
   return (
     <div className="space-y-3">
-      <section className="mt-3 overflow-hidden rounded border border-slate-200 bg-white shadow-xs">
+      <section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
         {/* Header 7 Thứ trong tuần */}
         <div className="grid grid-cols-7 w-full border-b border-slate-200 bg-slate-50/80 text-xs font-bold text-slate-700 text-center">
           {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'].map((dayName, idx) => (
@@ -105,7 +105,7 @@ export default function ScheduleMonthView({
                 {/* Header ô ngày */}
                 <div className="flex items-center justify-between mb-1">
                   <span
-                    className={`text-xs font-bold flex items-center justify-center w-6 h-6 rounded ${
+                    className={`text-xs font-bold flex items-center justify-center w-6 h-6 rounded-xl ${
                       isToday
                         ? 'bg-emerald-700 text-white shadow-2xs'
                         : isCurrentMonth
@@ -116,7 +116,7 @@ export default function ScheduleMonthView({
                     {date.getDate()}
                   </span>
                   {daySc.length > 0 && (
-                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1 py-0.2 rounded">
+                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1 py-0.2 rounded-xl">
                       {daySc.length} ca
                     </span>
                   )}
@@ -153,14 +153,14 @@ export default function ScheduleMonthView({
                       <div
                         key={sc.id}
                         onClick={() => onCardClick(sc)}
-                        className={`p-1.5 rounded bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition cursor-pointer relative group/monthCard border-l-2 ${
+                        className={`p-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition cursor-pointer relative group/monthCard border-l-2 ${
                           shiftConfig.accentBorder
                         } ${!isOpen ? 'opacity-60 bg-slate-50' : ''}`}
                       >
                         <div className="flex items-center justify-between gap-1">
                           <div className="flex items-center gap-1 min-w-0">
                             <span
-                              className={`px-1 py-0.2 rounded text-[7px] font-bold border shrink-0 ${shiftConfig.badge}`}
+                              className={`px-1 py-0.2 rounded-xl text-[7px] font-bold border shrink-0 ${shiftConfig.badge}`}
                             >
                               {shiftConfig.tag}
                             </span>
@@ -172,14 +172,14 @@ export default function ScheduleMonthView({
                           {!isDoctor && (canUpdate || canDelete) && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="opacity-0 group-hover/monthCard:opacity-100 transition-opacity flex items-center gap-0.5 bg-white border border-slate-200 rounded px-0.5 py-0.2 shadow-2xs shrink-0"
+                              className="opacity-0 group-hover/monthCard:opacity-100 transition-opacity flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl px-0.5 py-0.2 shadow-2xs shrink-0"
                             >
                               <button
                                 type="button"
                                 title="Sửa ca trực"
                                 disabled={!canUpdate}
                                 onClick={() => onOpenEdit(sc)}
-                                className="p-0.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded cursor-pointer"
+                                className="p-0.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl cursor-pointer"
                               >
                                 <Pencil className="h-2 w-2" />
                               </button>
@@ -188,7 +188,7 @@ export default function ScheduleMonthView({
                                 title={isOpen ? 'Khóa' : 'Mở'}
                                 disabled={!canUpdate}
                                 onClick={() => onToggleStatus(sc)}
-                                className="p-0.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded cursor-pointer"
+                                className="p-0.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-xl cursor-pointer"
                               >
                                 {isOpen ? <Lock className="h-2 w-2" /> : <Unlock className="h-2 w-2" />}
                               </button>
@@ -197,7 +197,7 @@ export default function ScheduleMonthView({
                                 title="Xóa"
                                 disabled={!canDelete}
                                 onClick={() => onRemove(sc)}
-                                className="p-0.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded cursor-pointer"
+                                className="p-0.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl cursor-pointer"
                               >
                                 <Trash2 className="h-2 w-2" />
                               </button>
@@ -225,7 +225,7 @@ export default function ScheduleMonthView({
 
       {/* KHỐI THỐNG KÊ TỔNG QUAN THÁNG */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Tổng ca trực tháng</p>
             <p className="text-base font-bold text-slate-900 mt-0.5">
@@ -233,12 +233,12 @@ export default function ScheduleMonthView({
               <span className="text-xs font-normal text-slate-500">ca làm việc</span>
             </p>
           </div>
-          <span className="p-2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
             <CalendarCheck className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Phân bổ ca trực</p>
             <div className="flex items-center gap-1.5 mt-1 text-[11px] font-semibold">
@@ -253,12 +253,12 @@ export default function ScheduleMonthView({
               )}
             </div>
           </div>
-          <span className="p-2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
             <Clock className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Tiến độ đặt hẹn</p>
             <p className="text-base font-bold text-slate-900 mt-0.5">
@@ -268,12 +268,12 @@ export default function ScheduleMonthView({
               </span>
             </p>
           </div>
-          <span className="p-2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
             <Users className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Cơ sở làm việc</p>
             <p
@@ -283,7 +283,7 @@ export default function ScheduleMonthView({
               {activeBranchName}
             </p>
           </div>
-          <span className="p-2 rounded bg-slate-50 text-slate-600 border border-slate-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-slate-50 text-slate-600 border border-slate-200/60 shrink-0">
             <Building2 className="w-4 h-4" />
           </span>
         </div>

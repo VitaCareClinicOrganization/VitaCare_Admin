@@ -63,7 +63,7 @@ export default function ScheduleWeekGridView({
 }: ScheduleWeekGridViewProps) {
   return (
     <div className="space-y-3">
-      <section className="mt-3 overflow-hidden rounded border border-slate-200 bg-white shadow-xs">
+      <section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
         <div
           className={`grid w-full ${
             isDoctor ? 'grid-cols-7' : 'grid-cols-[145px_repeat(7,minmax(0,1fr))]'
@@ -97,7 +97,7 @@ export default function ScheduleWeekGridView({
                 }`}
               >
                 {isToday && (
-                  <span className="absolute top-1 right-1 rounded bg-emerald-600 px-1 py-0.2 text-[8px] font-bold text-white uppercase shadow-2xs">
+                  <span className="absolute top-1 right-1 rounded-xl bg-emerald-600 px-1 py-0.2 text-[8px] font-bold text-white uppercase shadow-2xs">
                     Hôm nay
                   </span>
                 )}
@@ -133,12 +133,12 @@ export default function ScheduleWeekGridView({
                     <div className="p-2 flex flex-col justify-center gap-1 border-r border-b border-slate-200 bg-white">
                       <div className="flex items-center gap-1.5 min-w-0">
                         {/* Avatar Bác sĩ */}
-                        <div className="w-7 h-7 rounded bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center border border-emerald-200/80 shrink-0 shadow-2xs overflow-hidden">
+                        <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center border border-emerald-200/80 shrink-0 shadow-2xs overflow-hidden">
                           {doc.avatarUrl ? (
                             <img
                               src={doc.avatarUrl}
                               alt={docDisplayName}
-                              className="w-full h-full object-cover rounded"
+                              className="w-full h-full object-cover rounded-xl"
                             />
                           ) : (
                             <span className="text-[10px] font-bold text-emerald-700">BS.</span>
@@ -154,12 +154,12 @@ export default function ScheduleWeekGridView({
                       </div>
 
                       <div className="flex items-center gap-1 flex-wrap">
-                        <span className="inline-block px-1.5 py-0.2 rounded text-[9px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 truncate max-w-[80px]">
+                        <span className="inline-block px-1.5 py-0.2 rounded-xl text-[9px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 truncate max-w-[80px]">
                           {doc.doctor?.specialties?.[0]?.specialty?.name ||
                             doc.specialties?.[0]?.specialty?.name ||
                             'Đa khoa'}
                         </span>
-                        <span className="text-[9px] font-medium text-slate-600 bg-slate-100 px-1 py-0.2 rounded border border-slate-200/60 shrink-0">
+                        <span className="text-[9px] font-medium text-slate-600 bg-slate-100 px-1 py-0.2 rounded-xl border border-slate-200/60 shrink-0">
                           {totalDoctorShifts} ca
                         </span>
                       </div>
@@ -230,7 +230,7 @@ export default function ScheduleWeekGridView({
                                 <div
                                   key={sc.id}
                                   onClick={() => onCardClick(sc)}
-                                  className={`p-1.5 rounded bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer relative group/card border-l-2 ${
+                                  className={`p-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer relative group/card border-l-2 ${
                                     shiftConfig.accentBorder
                                   } ${!isOpen ? 'opacity-60 bg-slate-50' : ''}`}
                                 >
@@ -238,7 +238,7 @@ export default function ScheduleWeekGridView({
                                   <div className="flex items-center justify-between gap-1 mb-1">
                                     <div className="flex items-center gap-1 min-w-0">
                                       <span
-                                        className={`px-1 py-0.2 rounded text-[8px] font-bold border shrink-0 ${shiftConfig.badge}`}
+                                        className={`px-1 py-0.2 rounded-xl text-[8px] font-bold border shrink-0 ${shiftConfig.badge}`}
                                       >
                                         {shiftConfig.tag}
                                       </span>
@@ -251,14 +251,14 @@ export default function ScheduleWeekGridView({
                                     {!isDoctor && (canUpdate || canDelete) && (
                                       <div
                                         onClick={(e) => e.stopPropagation()}
-                                        className="opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center gap-0.5 bg-white shadow-2xs border border-slate-200 rounded px-0.5 py-0.2"
+                                        className="opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center gap-0.5 bg-white shadow-2xs border border-slate-200 rounded-xl px-0.5 py-0.2"
                                       >
                                         <button
                                           type="button"
                                           title="Chỉnh sửa ca trực"
                                           disabled={!canUpdate}
                                 onClick={() => onOpenEdit(sc)}
-                                          className="p-0.5 rounded text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer transition"
+                                          className="p-0.5 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer transition"
                                         >
                                           <Pencil className="h-2.5 w-2.5" />
                                         </button>
@@ -267,7 +267,7 @@ export default function ScheduleWeekGridView({
                                           title={isOpen ? 'Khóa ca trực' : 'Mở ca trực'}
                                           disabled={!canUpdate}
                                 onClick={() => onToggleStatus(sc)}
-                                          className="p-0.5 rounded text-slate-500 hover:text-amber-700 hover:bg-amber-50 cursor-pointer transition"
+                                          className="p-0.5 rounded-xl text-slate-500 hover:text-amber-700 hover:bg-amber-50 cursor-pointer transition"
                                         >
                                           {isOpen ? (
                                             <Lock className="h-2.5 w-2.5" />
@@ -280,7 +280,7 @@ export default function ScheduleWeekGridView({
                                           title="Xóa ca trực"
                                           disabled={!canDelete}
                                 onClick={() => onRemove(sc)}
-                                          className="p-0.5 rounded text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer transition"
+                                          className="p-0.5 rounded-xl text-slate-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer transition"
                                         >
                                           <Trash2 className="h-2.5 w-2.5" />
                                         </button>
@@ -298,7 +298,7 @@ export default function ScheduleWeekGridView({
                                     </span>
 
                                     <span
-                                      className="px-1 py-0.2 rounded text-[8px] font-medium bg-slate-50 text-slate-600 border border-slate-200/80 whitespace-nowrap"
+                                      className="px-1 py-0.2 rounded-xl text-[8px] font-medium bg-slate-50 text-slate-600 border border-slate-200/80 whitespace-nowrap"
                                       title={`Đã có ${occupied} / ${capacity} bệnh nhân đặt lịch`}
                                     >
                                       {occupied}/{capacity} slot
@@ -315,7 +315,7 @@ export default function ScheduleWeekGridView({
                           <button
                             disabled={!canCreate}
                             onClick={() => onOpenScheduleModal(docId, dStr)}
-                            className={`mt-1 w-full rounded border border-dashed py-0.5 text-[9px] font-semibold transition cursor-pointer ${
+                            className={`mt-1 w-full rounded-xl border border-dashed py-0.5 text-[9px] font-semibold transition cursor-pointer ${
                               daySc.length === 0
                                 ? 'border-slate-200 text-slate-400 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700'
                                 : 'border-transparent text-slate-400 opacity-0 group-hover:opacity-100 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700'
@@ -336,7 +336,7 @@ export default function ScheduleWeekGridView({
 
       {/* KHỐI THỐNG KÊ TỔNG QUAN CA TRỰC TUẦN */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Tổng ca trực tuần</p>
             <p className="text-base font-bold text-slate-900 mt-0.5">
@@ -344,12 +344,12 @@ export default function ScheduleWeekGridView({
               <span className="text-xs font-normal text-slate-500">ca làm việc</span>
             </p>
           </div>
-          <span className="p-2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
             <CalendarCheck className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Phân bổ ca trực</p>
             <div className="flex items-center gap-1.5 mt-1 text-[11px] font-semibold">
@@ -364,12 +364,12 @@ export default function ScheduleWeekGridView({
               )}
             </div>
           </div>
-          <span className="p-2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
             <Clock className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Tiến độ đặt hẹn</p>
             <p className="text-base font-bold text-slate-900 mt-0.5">
@@ -379,12 +379,12 @@ export default function ScheduleWeekGridView({
               </span>
             </p>
           </div>
-          <span className="p-2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
             <Users className="w-4 h-4" />
           </span>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-[11px] font-medium text-slate-500">Cơ sở làm việc</p>
             <p
@@ -394,7 +394,7 @@ export default function ScheduleWeekGridView({
               {activeBranchName}
             </p>
           </div>
-          <span className="p-2 rounded bg-slate-50 text-slate-600 border border-slate-200/60 shrink-0">
+          <span className="p-2 rounded-xl bg-slate-50 text-slate-600 border border-slate-200/60 shrink-0">
             <Building2 className="w-4 h-4" />
           </span>
         </div>

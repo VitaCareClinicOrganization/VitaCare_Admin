@@ -495,7 +495,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                             <span>
-                              Đã thanh toán trước (Online qua App/Web): <strong className="text-slate-900">{onlineCount} ca</strong> ({formatVnd(onlineAmount)})
+                              Đã thanh toán: <strong className="text-slate-900">{onlineCount} ca</strong> ({formatVnd(onlineAmount)})
                             </span>
                           </div>
                           <span className="text-[10px] text-slate-400 italic">Không cộng vào tiền bàn giao két ca trực</span>
