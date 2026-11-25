@@ -3,6 +3,7 @@
 import React from 'react'
 import { Config, Field } from '../types/catalog.types'
 import ImageUploader from './ImageUploader'
+import BranchFormModal from './BranchFormModal'
 import PackageSymptomsField from './PackageSymptomsField'
 import PackageBranchSchedulesField from './PackageBranchSchedulesField'
 
@@ -20,6 +21,7 @@ const toSlug = (str: string) =>
     .replace(/-+/g, '-')
 
 interface CatalogFormModalProps {
+  error?: string
   modal: 'create' | 'edit' | null
   onClose: () => void
   onSubmit: (e: React.FormEvent) => void
@@ -47,6 +49,7 @@ interface CatalogFormModalProps {
 }
 
 export default function CatalogFormModal({
+  error,
   modal,
   onClose,
   onSubmit,
@@ -73,6 +76,8 @@ export default function CatalogFormModal({
   onAddAllSuggested,
 }: CatalogFormModalProps) {
   if (!modal) return null
+  if (resource === 'branches') return <BranchFormModal modal={modal} form={form} setForm={setForm} saving={saving} onClose={onClose} onSubmit={onSubmit} error={error} />
+  const packageMethods = [...new Map((options['booking-methods'] || []).filter((method: any) => ['SPECIALTY_EXAM', 'AFTER_HOURS', 'HEALTH_PACKAGE'].includes(method.code)).map((method: any) => [String(method.bookingMethodId), method])).values()] as any[]
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-900/35 p-4 backdrop-blur-xs">
@@ -373,7 +378,7 @@ export default function CatalogFormModal({
                         setForm({
                           ...form,
                           [key]: source === 'specialties' ? Number(e.target.value) : e.target.value,
-                          ...(key === 'branchId' ? { branchBookingMethodId: '' } : {}),
+
                         })
                       }
                       className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-200 bg-white transition-colors focus:outline-none focus:border-emerald-600 hover:border-slate-300 cursor-pointer"
@@ -497,15 +502,23 @@ export default function CatalogFormModal({
             </label>
           )}
 
-          {resource === 'service-packages' && <PackageBranchSchedulesField
-            methods={options['booking-methods'] || []}
-            methodIds={form.branchBookingMethodIds || []}
-            onMethodsChange={(branchBookingMethodIds) => setForm((previous: any) => ({ ...previous, branchBookingMethodIds }))}
-            branches={(options.branches || []).filter((branch: any) => form.applyAllBranches || (form.branchIds || []).includes(branch.id))}
-            value={form.receptionSchedules || []}
-            onChange={(receptionSchedules) => setForm((previous: any) => ({ ...previous, receptionSchedules }))}
-            disabled={saving}
-          />}
+          {resource === 'service-packages' && <>
+            <div className="sm:col-span-2">
+              <label htmlFor="package-booking-method" className="mb-1 block text-xs font-semibold text-slate-700">Hình thức đặt khám</label>
+              <select id="package-booking-method" required disabled={saving} value={form.bookingMethodId || ''} onChange={event => setForm((previous: any) => ({ ...previous, bookingMethodId: event.target.value, receptionSchedules: [] }))} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
+                <option value="">Chọn một hình thức đặt khám</option>
+                {packageMethods.map(method => <option key={method.bookingMethodId} value={method.bookingMethodId}>{method.displayName}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-slate-600">Hình thức này áp dụng chung cho gói tại tất cả cơ sở triển khai.</p>
+            </div>
+            <PackageBranchSchedulesField
+              branches={(options.branches || []).filter((branch: any) => form.applyAllBranches || (form.branchIds || []).includes(branch.id))}
+              methodCode={packageMethods.find(method => String(method.bookingMethodId) === String(form.bookingMethodId))?.code}
+              value={form.receptionSchedules || []}
+              onChange={receptionSchedules => setForm((previous: any) => ({ ...previous, receptionSchedules }))}
+              disabled={saving || !form.bookingMethodId}
+            />
+          </>}
         </div>
 
         <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4 bg-slate-50/60">

@@ -13,7 +13,6 @@ import {
   AnalyticsRevenueSourcesTab,
   AnalyticsOperationsTab,
   AnalyticsDoctorsTab,
-  AnalyticsDemandAiTab,
 } from '../components'
 
 interface AdminAnalyticsPageProps {
@@ -22,7 +21,7 @@ interface AdminAnalyticsPageProps {
   embedded?: boolean
 }
 
-type TabType = 'revenue_timeline' | 'revenue_sources' | 'operations' | 'doctors' | 'demand_ai' | 'branch_comparison'
+type TabType = 'revenue_timeline' | 'revenue_sources' | 'operations' | 'doctors' | 'branch_comparison'
 
 export default function AdminAnalyticsPage({ stats, loading, embedded = false }: AdminAnalyticsPageProps) {
   const { token, user } = useAuth()
@@ -49,7 +48,7 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
   }, [])
 
   const loadAnalytics = useCallback(async () => {
-    if (activeTab === 'branch_comparison' || activeTab === 'demand_ai') { setFetching(false); return }
+    if (activeTab === 'branch_comparison') { setFetching(false); return }
     setFetching(true)
     try {
       const res = await fetchAnalyticsData({
@@ -115,7 +114,6 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
     { id: 'revenue_sources' as TabType, label: 'Nguồn thu Chuyên khoa & Gói khám' },
     { id: 'operations' as TabType, label: 'Lượt khám & Vận hành' },
     { id: 'doctors' as TabType, label: 'Hiệu suất Bác sĩ' },
-    { id: 'demand_ai' as TabType, label: 'Phân tích nhu cầu Khám' },
     ...(isChainManager ? [{ id: 'branch_comparison' as TabType, label: 'So sánh chi nhánh' }] : []),
   ]
 
@@ -139,7 +137,7 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
           </div>
 
           {/* Cụm Nút Xuất Thống Kê & Nút Làm Mới */}
-          <div className={activeTab === 'branch_comparison' || activeTab === 'demand_ai' ? 'hidden' : 'flex items-center gap-2'}>
+          <div className={activeTab === 'branch_comparison' ? 'hidden' : 'flex items-center gap-2'}>
             <button
               type="button"
               onClick={() => void loadAnalytics()}
@@ -317,16 +315,6 @@ export default function AdminAnalyticsPage({ stats, loading, embedded = false }:
       {activeTab === 'doctors' && (
         <AnalyticsDoctorsTab
           doctorsPerformance={analyticsData?.doctorsPerformance || []}
-        />
-      )}
-
-      {activeTab === 'demand_ai' && (
-        <AnalyticsDemandAiTab
-          branchFilter={branchFilter}
-          branches={branches}
-          timeFilter={timeFilter}
-          startDate={startDate}
-          endDate={endDate}
         />
       )}
     </div>

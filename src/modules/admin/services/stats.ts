@@ -1,31 +1,5 @@
 import { apiErrorMessage, apiRequest } from '@/lib/api-client'
 
-export interface RecommendationMetricCounts {
-  impressions: number
-  clicks: number
-  checkouts: number
-  bookings: number
-  paid: number
-  ctr: number | null
-  bookingRate: number | null
-  clickToBookingRate: number | null
-}
-
-export interface RecommendationMetrics {
-  start: string
-  end: string
-  attributionWindowHours: number
-  totals: RecommendationMetricCounts
-  bySource: Array<RecommendationMetricCounts & { source: string }>
-  byPackage: Array<RecommendationMetricCounts & { packageId: string; packageName: string | null }>
-}
-
-export function fetchRecommendationMetrics(
-  params: { timeFilter?: string; startDate?: string; endDate?: string }, signal?: AbortSignal,
-) {
-  return apiRequest<RecommendationMetrics>({ method: 'GET', url: '/analytics/recommendations', params, signal })
-}
-
 export async function fetchDashboardStats({
   token,
   branchId,

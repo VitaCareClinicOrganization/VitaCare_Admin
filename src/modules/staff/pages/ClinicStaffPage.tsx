@@ -74,7 +74,6 @@ const EMPTY = {
 const TABLE_COLUMNS = [
   'Nhân viên',
   'Chi nhánh',
-  'Chuyên khoa',
   { label: 'Vai trò', width: 'whitespace-nowrap' },
   { label: 'Trạng thái', width: 'whitespace-nowrap' },
   { label: 'Thao tác', align: 'right' as const, width: 'whitespace-nowrap' },
@@ -94,7 +93,9 @@ export default function ClinicStaffPage() {
   const navigate = useNavigate()
   const { role: currentRole } = useAuth()
   const isAccountManagement = currentRole === 'admin'
-  const tableColumns = TABLE_COLUMNS.map(column => column === 'Chuyên khoa' && isAccountManagement ? 'Đăng nhập gần nhất' : column)
+  const tableColumns = isAccountManagement
+    ? [...TABLE_COLUMNS.slice(0, 2), 'Đăng nhập gần nhất', ...TABLE_COLUMNS.slice(2)]
+    : TABLE_COLUMNS
   const { hasPermission } = usePermission()
   const canCreateUsers = hasPermission(AppPermission.USER_CREATE)
   const canUpdateUsers = hasPermission(AppPermission.USER_UPDATE)
@@ -369,14 +370,13 @@ export default function ClinicStaffPage() {
           <AdminTableHead columns={tableColumns} />
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <AdminTableLoading colSpan={6} message="Đang tải dữ liệu nhân sự…" />
+              <AdminTableLoading colSpan={tableColumns.length} message="Đang tải dữ liệu nhân sự…" />
             ) : filtered.length === 0 ? (
-              <AdminTableEmpty colSpan={6} message="Không có nhân sự phù hợp." />
+              <AdminTableEmpty colSpan={tableColumns.length} message="Không có nhân sự phù hợp." />
             ) : (
               filtered.map((row) => {
                 const bName =
                   (['chain_manager', 'admin'].includes(String(row.role).toLowerCase()) ? 'Toàn hệ thống' : row.branchAssignments?.[0]?.branch?.name || row.branchName || 'Chưa phân công')
-                const specName = [...(row.doctor?.specialties || [])].sort((a: any, b: any) => Number(b.isPrimary) - Number(a.isPrimary)).map((s: any) => s.specialty?.name).filter(Boolean).join(', ') || '—'
                 const avatar = row.avatarUrl || row.doctor?.avatarUrl
                 const roleKey = String(row.role || row.userType).toLowerCase()
                 return (
@@ -416,12 +416,10 @@ export default function ClinicStaffPage() {
                         return <span className="font-semibold text-slate-800">{bList[0]}</span>
                       })()}
                     </td>
-                    <td className="px-5 py-3.5 text-xs whitespace-nowrap">
-                      {isAccountManagement ? <>
+                    {isAccountManagement && <td className="px-5 py-3.5 text-xs whitespace-nowrap">
                         <p className={row.lastLoginAt ? 'font-medium text-slate-800' : 'text-slate-400'}>{row.lastLoginAt ? formatAccountDate(row.lastLoginAt, true) : 'Chưa ghi nhận'}</p>
                         <p className="mt-1 text-[11px] text-slate-400">Ngày tạo: {formatAccountDate(row.createdAt)}</p>
-                      </> : <span className="text-emerald-800 font-medium">{specName}</span>}
-                    </td>
+                    </td>}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200 whitespace-nowrap">
                         {ROLE_LABEL[roleKey] || row.role}

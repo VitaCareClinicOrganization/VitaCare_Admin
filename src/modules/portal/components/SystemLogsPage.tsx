@@ -38,7 +38,7 @@ import {
 } from '@/common/components/ui'
 
 interface LogItem {
-  id: string
+  id: string | number
   type: 'AUDIT' | 'OUTBOX' | 'LOGIN'
   action: string
   targetType: string
@@ -525,7 +525,7 @@ export default function SystemLogsPage() {
                   const isAudit = log.type === 'AUDIT' || log.type === 'LOGIN'
                   return (
                     <tr
-                      key={log.id}
+                      key={`${log.type}:${log.id}`}
                       className={`hover:bg-slate-50/80 transition-colors ${
                         isError ? 'bg-rose-50/30' : ''
                       }`}
