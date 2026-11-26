@@ -51,3 +51,10 @@ export async function approveAppointmentRefund(appointmentId: string, amount: nu
     return unwrapApiData<{ refund: Record<string, any>; message: string }>(response)
   } catch (error) { throw new Error(apiErrorMessage(error, 'Không duyệt được khoản hoàn tiền.')) }
 }
+
+export async function completeAppointmentRefund(appointmentId: string, note?: string) {
+  try {
+    const response = await apiRequest({ method: 'POST', url: `/payments/appointments/${encodeURIComponent(appointmentId)}/refund/complete`, data: note ? { note } : {} })
+    return unwrapApiData<{ refund: Record<string, any>; message: string }>(response)
+  } catch (error) { throw new Error(apiErrorMessage(error, 'Không xác nhận được đã hoàn tiền.')) }
+}

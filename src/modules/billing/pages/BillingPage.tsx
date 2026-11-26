@@ -18,13 +18,13 @@ import {
   StatusBadge,
 } from '@/common/components/ui'
 import { listReceptionAppointments } from '@/modules/admin/services/appointments'
-import { approveAppointmentRefund, recordAppointmentPayment } from '@/modules/admin/services/payments'
+import { approveAppointmentRefund, completeAppointmentRefund, recordAppointmentPayment } from '@/modules/admin/services/payments'
 import { staffRole } from '@/modules/admin/utils/staffSession'
 import MyCollectionsPanel from '../components/MyCollectionsPanel'
 
 type AppointmentRow = Record<string, any>
-const isRefundReviewPending = (item: AppointmentRow) => !!item.payment?.refund && !['APPROVED', 'NOT_ELIGIBLE'].includes(item.payment.refund.approvalStatus)
-const refundStatusLabel = (item: AppointmentRow) => item.payment?.refund?.approvalStatus === 'NOT_ELIGIBLE' ? 'Không hoàn tiền' : item.payment?.refund?.approvalStatus === 'APPROVED' ? 'Chờ chuyển tiền' : 'Chờ xét duyệt'
+const isRefundReviewPending = (item: AppointmentRow) => !!item.payment?.refund && !['APPROVED', 'COMPLETED', 'NOT_ELIGIBLE'].includes(item.payment.refund.approvalStatus)
+const refundStatusLabel = (item: AppointmentRow) => item.payment?.refund?.approvalStatus === 'NOT_ELIGIBLE' ? 'Không hoàn tiền' : (item.payment?.refund?.approvalStatus === 'COMPLETED' || item.payment?.status === 'REFUNDED') ? 'Đã hoàn tiền' : item.payment?.refund?.approvalStatus === 'APPROVED' ? 'Chờ chuyển tiền' : 'Chờ xét duyệt'
 const money = (val: any) => `${Number(val || 0).toLocaleString('vi-VN')} đ`
 const APPOINTMENT_STATUSES: Record<string, string> = {
   HOLD: 'Đang giữ chỗ', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã tiếp nhận',
@@ -99,12 +99,29 @@ export default function BillingPage({ refundsOnly = false }: { refundsOnly?: boo
   const [approvalNote, setApprovalNote] = useState('')
   const [approvalError, setApprovalError] = useState('')
   const [approvingRefund, setApprovingRefund] = useState(false)
+  const [completingRefund, setCompletingRefund] = useState(false)
+  const [completeError, setCompleteError] = useState('')
 
   useEffect(() => {
     setRefundAmount('')
     setApprovalNote('')
     setApprovalError('')
+    setCompleteError('')
   }, [selectedItem?.id])
+
+  const handleCompleteRefund = async () => {
+    if (!selectedItem || completingRefund) return
+    setCompletingRefund(true)
+    setCompleteError('')
+    try {
+      const result = await completeAppointmentRefund(selectedItem.id)
+      if (!result?.refund) throw new Error('Chưa nhận được kết quả xác nhận. Vui lòng tải lại danh sách.')
+      setSelectedItem(current => current ? { ...current, payment: { ...current.payment, status: 'REFUNDED', refund: result.refund } } : current)
+      await loadData()
+    } catch (error: any) {
+      setCompleteError(error?.message || 'Không xác nhận được đã hoàn tiền.')
+    } finally { setCompletingRefund(false) }
+  }
 
   const handleApproveRefund = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -582,7 +599,26 @@ export default function BillingPage({ refundsOnly = false }: { refundsOnly?: boo
                   <span className="text-[10px] text-slate-500 mt-1.5 text-center">
                     Số tiền chuyển khoản: <strong className="text-slate-900">{money(selectedItem.payment.refund.refundAmount)}</strong>
                   </span>
-                </div> : <p className="text-sm text-slate-500">Mã chuyển tiền sẽ hiển thị sau khi khoản hoàn được duyệt.</p>}
+                  {role === 'branch_manager' && (
+                    <div className="mt-4 w-full space-y-2">
+                      {completeError && <p role="alert" className="text-xs text-rose-700 text-center">{completeError}</p>}
+                      <button
+                        type="button"
+                        disabled={completingRefund}
+                        onClick={() => void handleCompleteRefund()}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {completingRefund ? <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> : <CheckCircle className="h-4 w-4" aria-hidden="true" />}
+                        {completingRefund ? 'Đang xác nhận…' : 'Xác nhận đã chuyển hoàn tiền'}
+                      </button>
+                    </div>
+                  )}
+                </div> : selectedItem.payment.refund?.approvalStatus === 'COMPLETED' ? (
+                  <p className="text-sm font-medium text-emerald-700 flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    Đã xác nhận chuyển khoản hoàn tiền cho bệnh nhân.
+                  </p>
+                ) : <p className="text-sm text-slate-500">Mã chuyển tiền sẽ hiển thị sau khi khoản hoàn được duyệt.</p>}
               </div>
             )}
 
